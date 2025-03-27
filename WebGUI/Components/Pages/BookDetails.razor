@@ -1,0 +1,56 @@
+﻿@page "/book_details/{CoverId:int}"
+@inject OpenLibraryService BookService
+
+<PageTitle>Book Details</PageTitle>
+
+<div class="container">
+    @if (isLoading)
+    {
+    <p>Lade Buchdetails...</p>
+    }
+    else if (errorMessage != null)
+    {
+    <p style="color: red;">@errorMessage</p>
+    }
+    else if (book != null)
+    {
+    <h2>@book.Title</h2>
+    <img src="@book.CoverUrl" alt="@book.Title" style="width: 200px; height: 300px; object-fit: cover;" />
+    <p><strong>Autor:</strong> @book.Author_Name</p>
+    <button @onclick="LikeBook" class="btn" style="background-color: #F2ACC4;">
+        <i class="bi bi-heart"></i> Gefällt mir
+    </button>
+    }
+</div>
+
+@code {
+[Parameter] public int CoverId { get; set; }
+private Book book;
+private bool isLoading = true;
+private string errorMessage;
+
+protected override async Task OnInitializedAsync()
+{
+try
+{
+book = await BookService.GetBookById(CoverId);
+if (book == null)
+{
+errorMessage = "Buch nicht gefunden";
+}
+}
+catch (Exception ex)
+{
+errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
+}
+finally
+{
+isLoading = false;
+}
+}
+
+private void LikeBook()
+{
+// Implementieren Sie die Like-Logik hier
+}
+}
