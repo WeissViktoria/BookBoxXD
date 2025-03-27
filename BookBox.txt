@@ -1,0 +1,43 @@
+BookBox - digitale Leseliste
+
+	Funktionalitäten:
+		0. Navbar (auf der Seite)
+			* Hauptseite
+			* Leseliste
+			* gelesene Liste
+		1. Hauptseite (Alle Bücher)
+			* Zeigt eine Übersicht aller verfügbaren Bücher
+			* Jedes Buch hat ein Herz-Symbol, mit dem es zur Leseliste hinzugefügt werden kann
+			* Suchfunktion zum schnellen Finden von Büchern
+		2. Detailansicht Buch (nicht gelesen)
+			* Bild vom Buch
+			* Details (Beschreibung, Erscheinungsjahr, Autor)
+			* Herz-Button, um das Buch zur Leseliste hinzuzufügen oder zu entfernen
+			* Gelesen-Button (Brille), noch nicht gedrückt
+		3. Detailansicht Buch (gelesen)
+			* Bild vom Buch
+			* Details (Beschreibung, Erscheinungsjahr, Autor)
+			* Herz-Button, um das Buch zur Leseliste hinzuzufügen oder zu entfernen
+			* Gelesen-Button (Brille) gedrückt
+			* Stern Rating + Nachrichtenfeld kommen, damit man das Buch bewerten kann
+		4. Leseliste (Bücher die man lesen will)
+			* Enthält alle Bücher, die der Nutzer lesen möchte (geherzt hat)
+			* Entfernen eines Buches durch:
+				a. Tippen auf das Herz-Symbol (wird aus der Leseliste entfernt)
+				b. Tippen auf den Gelesen-Button (wird automatisch in die Gelesen-Liste verschoben)
+		5. Gelesene Liste
+			* Enthält alle Bücher, die der Nutzer bereits gelesen hat
+
+	Datenbank: Ja	-> alle Herzen, Sterne, Kommentare, gelesen
+	vlt. eine externe API für Buchdaten (z. B. Google Books API)
+
+	User Storys:
+		1) Als Benutzer möchte ich eine Übersicht aller verfügbaren Bücher, damit ich mich schnell für ein Buch entscheiden kann
+		2) Als Benutzer möchte ich ein Buch zur Leseliste hinzufügen, indem ich auf das Herz-Symbol klicke, damit ich es später lesen kann
+		3) Als Benutzer möchte ich in der Detailansicht eines Buches mehr Informationen zum Buch sehen
+
+		4) Als Benutzer möchte ich in der Detailansicht eines gelesenen Buches die Möglichkeit haben, es zu bewerten und Kommentare hinzuzufügen
+		5) Als Benutzer möchte ich in meiner Leseliste alle Bücher sehen, die ich lesen möchte, damit ich sie später einfach finden kann
+		6) Als Benutzer möchte ich ein Buch aus meiner Leseliste entfernen können, wenn ich es nicht mehr lesen möchte
+		7) Als Benutzer möchte ich eine Gelesen-Liste haben, die alle Bücher anzeigt, die ich bereits gelesen habe, um sie später nachzuschlagen
+	

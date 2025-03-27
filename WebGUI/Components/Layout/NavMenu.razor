@@ -1,0 +1,38 @@
+﻿
+<div class="top-row ps-2 navbar navbar-dark" style="background-color: #A64365;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">
+            <img src="/image-removebg-preview.png" alt="Logo" style="height: 100px;">
+        </a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()" style="background-color: #A64365; padding-top: 80px;">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link text-white" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Buch Übersicht
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link text-white" href="counter">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Buchdetails
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link text-white" href="/search-books">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Favoriten
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link text-white" href="gelesen">
+                <span class="bi bi-book-nav-menu" aria-hidden="true"></span> gelesene
+            </NavLink>
+        </div>
+    </nav>
+</div>

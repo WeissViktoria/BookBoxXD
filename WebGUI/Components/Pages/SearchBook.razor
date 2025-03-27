@@ -1,0 +1,43 @@
+﻿@page "/search-books"
+@inject OpenLibraryService OpenLibraryService
+@rendermode InteractiveServer
+
+
+<h1>Book Search</h1>
+
+<input @bind="searchQuery" placeholder="Enter book title or author" />
+<button @onclick="FetchBooks">Search</button>
+
+@if (books != null)
+{
+    <ul>
+        @foreach (var book in books)
+        {
+            <li>
+                <strong>@book.Title</strong> by @(book.Author_Name != null ? string.Join(", ", book.Author_Name) : "Unknown")
+                @if (!string.IsNullOrEmpty(book.First_Sentence))
+                {
+                    <p>@book.First_Sentence</p>
+                }
+                @if (!string.IsNullOrEmpty(book.CoverUrl))
+                {
+                    <img src="@book.CoverUrl" alt="Book cover" />
+                }
+                @if (book.ISBN != null && book.ISBN.Count > 0)
+                {
+                    <p>ISBN: @book.ISBN[0]</p>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private string searchQuery;
+    private List<Book> books;
+
+    private async Task FetchBooks()
+    {
+        books = await OpenLibraryService.SearchBooks(searchQuery);
+    }
+}
