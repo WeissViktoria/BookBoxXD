@@ -1,6 +1,9 @@
 ﻿@page "/register"
 
+@using Domain.Interfaces
 @using Microsoft.AspNetCore.Components.Web
+@using Model.Entities
+@inject IRepository<Benutzer> BenutzerRepo;
 
 <PageTitle>Registrieren</PageTitle>
 
@@ -110,30 +113,36 @@
             <div class="col-md-6 d-flex align-items-center">
                 <div class="register-form w-100">
                     <h2 class="mb-4">Registriere dich bei Book Box!</h2>
-                    <form>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Benutzername</label>
-                            <input type="text" class="form-control" id="username" placeholder="Gib deinen Benutzernamen ein" required>
+                    <div class="container">
+                        <div class="row">
+                            <EditForm Model="Benutzer" OnInvalidSubmit="async () => await CreateAsync()" FormName="RegisterForm">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary />
+
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Benutzername</label>
+                                    <InputText type="text" class="form-control" id="username" @bind-Value="Benutzer.Benutzername" placeholder="Gib deinen Benutzernamen ein" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">E-Mail-Adresse</label>
+                                    <InputText type="email" class="form-control" id="email" @bind-Value="Benutzer.EmailAdresse" placeholder="Gib deine E-Mail ein" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label for="birthday" class="form-label">Geburtsdatum</label>
+                                    <InputDate class="form-control" id="birthday" @bind-Value="Benutzer.Geburtstag" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Passwort</label>
+                                    <InputText type="password" class="form-control" id="password" @bind-Value="Benutzer.Passwort" placeholder="Gib dein Passwort ein" required />
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-custom">Registrieren</button>
+                                </div>
+                            </EditForm>
+
+
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">E-Mail-Adresse</label>
-                            <input type="email" class="form-control" id="email" placeholder="Gib deine E-Mail ein" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="birthday" class="form-label">Geburtsdatum</label>
-                            <input type="date" class="form-control" id="birthday" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Passwort</label>
-                            <input type="password" class="form-control" id="password" placeholder="Gib dein Passwort ein" required>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-custom">Registrieren</button>
-                        </div>
-                        <p class="mt-3">
-                            <a href="/login">Schon ein Konto? Jetzt einloggen</a>
-                        </p>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -149,15 +158,12 @@
         });
     });
 </script>
-
 @code {
-    [CascadingParameter] public bool ShowNavMenu { get; set; }
+    private Benutzer Benutzer = new();
 
-    protected override void OnInitialized()
+    async Task CreateAsync()
     {
-        ShowNavMenu = false; // Hide NavMenu for this page
+        await BenutzerRepo.CreateAsync(Benutzer);
     }
-    
-    
     
 }
