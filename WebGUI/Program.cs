@@ -1,5 +1,7 @@
+using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Model.Configurations;
+using Model.Entities;
 using WebGUI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,10 @@ builder.Services.AddDbContextFactory<BuchContext>(
         new MySqlServerVersion(new Version(8, 0, 27))
     )
 );
+
+builder.Services.AddScoped<IRepository<Buch>, BookRepository>();
+builder.Services.AddScoped<IRepository<Benutzer>, BenutzerRepository>();
+
 
 builder.Services.AddHttpClient<OpenLibraryService>();
 
