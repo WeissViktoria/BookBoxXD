@@ -24,9 +24,8 @@ public class Benutzer
     
     [Required]
     [Column("GEBURTSTAG")]
-    public string Geburtstag { get; set; }
+    public DateTime Geburtstag { get; set; }
     
-    [Required]
-    [Column("PROFIL_BILD")]
-    public byte[] Profilbild { get; set; }
+    //[Column("PROFIL_BILD")]
+    //public byte[]? Profilbild { get; set; }
 }
