@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject OpenLibraryService BookService
+@inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <head>
@@ -13,8 +14,8 @@
     <div class="d-flex align-items-center">
         @if (showSearchField)
         {
-        <input @bind="searchQuery" placeholder="Enter book title or author" class="form-control" />
-        <button class="btn" style="background-color: #F2ACC4;" @onclick="FetchBooks">Search</button>
+        <input @bind="searchQuery" placeholder="Buchtitel oder Autor eingeben" class="form-control" />
+        <button class="btn" style="background-color: #F2ACC4;" @onclick="FetchBooks">Suchen</button>
         }
         <button class="btn btn-light search-icon" @onclick="ShowSearchField">
             <i class="bi bi-search"></i>
@@ -52,9 +53,10 @@
         background-color: rgba(0, 0, 0, 0.7);
         color: white;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         justify-content: center;
+        gap: 10px;
         opacity: 0;
         transition: opacity 0.3s;
     }
@@ -67,9 +69,11 @@
         background-color: #F2ACC4;
         border: none;
         padding: 10px;
-        margin: 5px;
         cursor: pointer;
         border-radius: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
 
     .search-icon {
@@ -94,10 +98,12 @@ else if (books != null)
     @foreach (var book in books)
     {
     <div class="book-cover">
-        <img src="@book.CoverUrl" />
+        <img src="@book.CoverUrl" alt="@book.Title" />
         <div class="overlay">
             <button @onclick="() => LikeBook(book)"><i class="bi bi-heart"></i></button>
-            <button @onclick="() => ShowDetails(book)">Details</button>
+            <button @onclick="() => NavigateTo(book.Cover_I)">
+                <i class="bi bi-book-half"></i>
+            </button>
         </div>
     </div>
     }
@@ -136,21 +142,39 @@ isLoading = false;
 
 private async Task FetchBooks()
 {
+isLoading = true;
+try
+{
 books = await BookService.SearchBooks(searchQuery);
+if (books == null || books.Count == 0)
+{
+errorMessage = "Keine Bücher gefunden";
+}
+}
+catch (Exception ex)
+{
+errorMessage = $"Fehler bei der Suche: {ex.Message}";
+}
+finally
+{
+isLoading = false;
+}
 }
 
 private void ShowSearchField()
 {
 showSearchField = !showSearchField;
+if (!showSearchField) searchQuery = string.Empty;
 }
 
 private void LikeBook(Book book)
 {
-// Implementiere die Like-Logik hier
+// Like-Logik implementieren
 }
 
-private void ShowDetails(Book book)
+private void NavigateTo(int? coverId)
 {
-// Implementiere die Detail-Logik hier
+Navigation.NavigateTo($"book_details/{coverId}", forceLoad: true);
 }
+
 }
