@@ -2,6 +2,8 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Net.Http.Json;
+
 
 public class OpenLibraryService
 {
@@ -25,6 +27,23 @@ public class OpenLibraryService
         var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>($"{API_URL}{"ab"}");
         return response?.Docs ?? new List<Book>();
     }
+   public async Task<Book> GetBookById(int bookId)
+       {
+           // Angenommene URL für die Open Library API. Ersetzen Sie dies durch die tatsächliche URL Ihrer API
+           var response = await _httpClient.GetAsync($"https://openlibrary.org/api/books/{bookId}");
+   
+           if (response.IsSuccessStatusCode)
+           {
+               var book = await response.Content.ReadFromJsonAsync<Book>(); // Oder verwenden Sie Ihre eigene Methode zum Deserialisieren
+               return book;
+           }
+           else
+           {
+               return null;
+           }
+       }
+
+
 }
 
 // Models

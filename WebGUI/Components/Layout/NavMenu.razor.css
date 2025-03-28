@@ -30,30 +30,12 @@
     width: 1.25rem;
     height: 1.25rem;
     margin-right: 0.75rem;
-    top: -1px;
+    top:-0.75rem;
     background-size: cover;
 }
 
 
-.bi-house-door-fill-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-house-door-fill' viewBox='0 0 16 16'%3E%3Cpath d='M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5Z'/%3E%3C/svg%3E");
-}
 
-.bi-book-half-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-book-half' viewBox='0 0 16 16'%3E%3Cpath d='M8.5 2.5v11l-.5-.5-5 1.5v-11l5-1.5.5.5Z'/%3E%3C/svg%3E");
-}
-
-.bi-bookmark-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-bookmark' viewBox='0 0 16 16'%3E%3Cpath d='M2 2v12l6-3 6 3V2H2z'/%3E%3C/svg%3E");
-}
-
-.bi-book-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-book' viewBox='0 0 16 16'%3E%3Cpath d='M1 2v12a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V2H1zm10 11H4v-1h7v1zm0-3H4V9h7v1zm0-3H4V6h7v1z'/%3E%3C/svg%3E");
-}
-
-.bi-person-circle-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-person-circle' viewBox='0 0 16 16'%3E%3Cpath d='M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm0 3a3 3 0 1 1 0 6A3 3 0 0 1 8 3zm0 8a5 5 0 0 1-4.546 2.916 5.967 5.967 0 0 0 9.092 0A5 5 0 0 1 8 11z'/%3E%3C/svg%3E");
-}
 
 
 
