@@ -4,6 +4,8 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Model.Entities
 @inject IRepository<Benutzer> BenutzerRepo;
+@rendermode InteractiveServer
+
 
 <PageTitle>Registrieren</PageTitle>
 
@@ -115,29 +117,28 @@
                     <h2 class="mb-4">Registriere dich bei Book Box!</h2>
                     <div class="container">
                         <div class="row">
-                            <EditForm Model="Benutzer" OnInvalidSubmit="async () => await CreateAsync()" FormName="RegisterForm">
+                            <EditForm Model="NewUser" OnValidSubmit="CreateUser" FormName="RegisterForm">
                                 <DataAnnotationsValidator />
-                                <ValidationSummary />
+                                <ValidationSummary class="alert alert-danger" />
 
                                 <div class="mb-3">
-                                    <label for="username" class="form-label">Benutzername</label>
-                                    <InputText type="text" class="form-control" id="username" @bind-Value="Benutzer.Benutzername" placeholder="Gib deinen Benutzernamen ein" required />
+                                    <label class="form-label">Benutzername:</label>
+                                    <InputText @bind-Value="NewUser.Benutzername" class="form-control" />
                                 </div>
                                 <div class="mb-3">
-                                    <label for="email" class="form-label">E-Mail-Adresse</label>
-                                    <InputText type="email" class="form-control" id="email" @bind-Value="Benutzer.EmailAdresse" placeholder="Gib deine E-Mail ein" required />
+                                    <label class="form-label">E-Mail:</label>
+                                    <InputText @bind-Value="NewUser.EmailAdresse" class="form-control" type="email" />
                                 </div>
                                 <div class="mb-3">
-                                    <label for="birthday" class="form-label">Geburtsdatum</label>
-                                    <InputDate class="form-control" id="birthday" @bind-Value="Benutzer.Geburtstag" required />
+                                    <label class="form-label">Geburtsdatum:</label>
+                                    <InputDate @bind-Value="NewUser.Geburtstag" class="form-control" />
                                 </div>
                                 <div class="mb-3">
-                                    <label for="password" class="form-label">Passwort</label>
-                                    <InputText type="password" class="form-control" id="password" @bind-Value="Benutzer.Passwort" placeholder="Gib dein Passwort ein" required />
+                                    <label class="form-label">Passwort:</label>
+                                    <InputText @bind-Value="NewUser.Passwort" class="form-control" type="password" />
                                 </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-custom">Registrieren</button>
-                                </div>
+
+                                <button class="btn btn-primary" type="submit">Registrieren</button>
                             </EditForm>
 
 
@@ -159,11 +160,12 @@
     });
 </script>
 @code {
-    private Benutzer Benutzer = new();
-
-    async Task CreateAsync()
-    {
-        await BenutzerRepo.CreateAsync(Benutzer);
-    }
+    private Benutzer NewUser { get; set; } = new();
     
+    private async Task CreateUser()
+    {
+        Console.WriteLine("CreateAsync wurde aufgerufen!");
+        await BenutzerRepo.CreateAsync(NewUser);
+        NewUser = new Benutzer();
+    }
 }
