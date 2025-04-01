@@ -117,16 +117,16 @@
                     <h2 class="mb-4">Willkommen zurück!</h2>
                     <div class="container">
                         <div class="row">
-                            <EditForm OnValidSubmit="CheckUser" FormName="LoginForm">
+                            <EditForm Model="loginData" OnValidSubmit="CheckUser">
                                 <DataAnnotationsValidator />
                                 <ValidationSummary class="alert alert-danger" />
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Benutzername</label>
-                                    <InputText @bind-Value="Benutzername" type="text" class="form-control" id="username" placeholder="Gib deinen Benutzernamen ein"/>
+                                    <InputText @bind-Value="loginData.Benutzername" type="text" class="form-control" id="username" placeholder="Gib deinen Benutzernamen ein"/>
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Passwort</label>
-                                    <InputText @bind-Value="Passwort" type="password" class="form-control" id="password" placeholder="Gib dein Passwort ein"/>
+                                    <InputText @bind-Value="loginData.Passwort" type="password" class="form-control" id="password" placeholder="Gib dein Passwort ein"/>
                                 </div>
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-custom">Einloggen</button>
@@ -154,20 +154,23 @@
 </script>
 
 @code {
-    private string Benutzername { get; set; }
-    private string Passwort { get; set; }
+    private LoginModel loginData = new();
     private string Message { get; set; }
 
-
+    private class LoginModel
+    {
+        public string Benutzername { get; set; } = string.Empty;
+        public string Passwort { get; set; } = string.Empty;
+    }
 
     private async Task CheckUser()
     {
-        var user = await BenutzerRepo.ReadAsync(u => u.Benutzername == Benutzername
-                                      && u.Passwort == Passwort);
+        var user = await BenutzerRepo.ReadAsync(u => u.Benutzername == loginData.Benutzername
+                                                     && u.Passwort == loginData.Passwort);
+
         if (user.Any())
         {
-            Message = "Login erfolgreich!";
-            Navigation.NavigateTo("/"); // Weiterleitung nach erfolgreichem Login
+            Navigation.NavigateTo("/");
         }
         else
         {
