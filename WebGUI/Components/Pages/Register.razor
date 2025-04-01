@@ -4,6 +4,8 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Model.Entities
 @inject IRepository<Benutzer> BenutzerRepo;
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
+
 @rendermode InteractiveServer
 
 
@@ -160,12 +162,14 @@
     });
 </script>
 @code {
-private Benutzer NewUser { get; set; } = new();
+    private Benutzer NewUser { get; set; } = new();
+    
+    private async Task CreateUser()
+    {
+        Console.WriteLine("CreateAsync wurde aufgerufen!");
+        await BenutzerRepo.CreateAsync(NewUser);
+        NewUser = new Benutzer();
+        Navigation.NavigateTo("/login");
 
-private async Task CreateUser()
-{
-Console.WriteLine("CreateAsync wurde aufgerufen!");
-await BenutzerRepo.CreateAsync(NewUser);
-NewUser = new Benutzer();
-}
+    }
 }
