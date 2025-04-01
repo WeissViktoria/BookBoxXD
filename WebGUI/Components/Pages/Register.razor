@@ -160,12 +160,12 @@
     });
 </script>
 @code {
-    private Benutzer NewUser { get; set; } = new();
-    
-    private async Task CreateUser()
-    {
-        Console.WriteLine("CreateAsync wurde aufgerufen!");
-        await BenutzerRepo.CreateAsync(NewUser);
-        NewUser = new Benutzer();
-    }
+private Benutzer NewUser { get; set; } = new();
+
+private async Task CreateUser()
+{
+Console.WriteLine("CreateAsync wurde aufgerufen!");
+await BenutzerRepo.CreateAsync(NewUser);
+NewUser = new Benutzer();
+}
 }
