@@ -111,70 +111,70 @@ else if (books != null)
 }
 
 @code {
-private List<Book> books;
-private bool isLoading = false;
-private string errorMessage;
-private string searchQuery;
-private bool showSearchField = false;
+    private List<Book> books;
+    private bool isLoading = false;
+    private string errorMessage;
+    private string searchQuery;
+    private bool showSearchField = false;
 
-private async Task LoadRandomBooks()
-{
-isLoading = true;
-errorMessage = null;
-try
-{
-books = await BookService.GetAllBooks();
-if (books != null && books.Count > 56)
-{
-var random = new Random();
-books = books.OrderBy(b => random.Next()).Take(56).ToList();
-}
-}
-catch (Exception ex)
-{
-errorMessage = $"Fehler: {ex.Message}";
-}
-finally
-{
-isLoading = false;
-}
-}
+    private async Task LoadRandomBooks()
+    {
+    isLoading = true;
+    errorMessage = null;
+    try
+    {
+    books = await BookService.GetAllBooks();
+    if (books != null && books.Count > 56)
+    {
+    var random = new Random();
+    books = books.OrderBy(b => random.Next()).Take(56).ToList();
+    }
+    }
+    catch (Exception ex)
+    {
+    errorMessage = $"Fehler: {ex.Message}";
+    }
+    finally
+    {
+    isLoading = false;
+    }
+    }
 
-private async Task FetchBooks()
-{
-isLoading = true;
-try
-{
-books = await BookService.SearchBooks(searchQuery);
-if (books == null || books.Count == 0)
-{
-errorMessage = "Keine Bücher gefunden";
-}
-}
-catch (Exception ex)
-{
-errorMessage = $"Fehler bei der Suche: {ex.Message}";
-}
-finally
-{
-isLoading = false;
-}
-}
+    private async Task FetchBooks()
+    {
+    isLoading = true;
+    try
+    {
+    books = await BookService.SearchBooks(searchQuery);
+    if (books == null || books.Count == 0)
+    {
+    errorMessage = "Keine Bücher gefunden";
+    }
+    }
+    catch (Exception ex)
+    {
+    errorMessage = $"Fehler bei der Suche: {ex.Message}";
+    }
+    finally
+    {
+    isLoading = false;
+    }
+    }
 
-private void ShowSearchField()
-{
-showSearchField = !showSearchField;
-if (!showSearchField) searchQuery = string.Empty;
-}
+    private void ShowSearchField()
+    {
+    showSearchField = !showSearchField;
+    if (!showSearchField) searchQuery = string.Empty;
+    }
 
-private void LikeBook(Book book)
-{
-// Like-Logik implementieren
-}
+    private void LikeBook(Book book)
+    {
+    // Like-Logik implementieren
+    }
 
-private void NavigateTo(int? coverId)
-{
-Navigation.NavigateTo($"book_details/{coverId}", forceLoad: true);
-}
+    private void NavigateTo(int? coverId)
+    {
+    Navigation.NavigateTo($"book_details/{coverId}", forceLoad: true);
+    }
 
 }

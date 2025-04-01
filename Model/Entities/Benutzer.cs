@@ -20,12 +20,12 @@ public class Benutzer
     
     [Required, StringLength(200)]
     [Column("EMAIL_ADDRESSE")]
-    public string EmailAdresse { get; set; }
+    public string? EmailAdresse { get; set; }
     
     [Required]
     [Column("GEBURTSTAG")]
-    public DateTime Geburtstag { get; set; }
+    public DateTime? Geburtstag { get; set; }
     
-    //[Column("PROFIL_BILD")]
-    //public byte[]? Profilbild { get; set; }
+    [Column("PROFIL_BILD")]
+    public byte[]? Profilbild { get; set; }
 }

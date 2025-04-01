@@ -1,6 +1,12 @@
 ﻿@page "/login"
 
+@using Domain.Interfaces
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
+@using Model.Entities
+@inject IRepository<Benutzer> BenutzerRepo;
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
 
 <PageTitle>Login</PageTitle>
 
@@ -109,22 +115,28 @@
             <div class="col-md-6 d-flex align-items-center">
                 <div class="login-form w-100">
                     <h2 class="mb-4">Willkommen zurück!</h2>
-                    <form>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Benutzername</label>
-                            <input type="text" class="form-control" id="username" placeholder="Gib deinen Benutzernamen ein">
+                    <div class="container">
+                        <div class="row">
+                            <EditForm OnValidSubmit="CheckUser" FormName="LoginForm">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary class="alert alert-danger" />
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Benutzername</label>
+                                    <InputText @bind-Value="Benutzername" type="text" class="form-control" id="username" placeholder="Gib deinen Benutzernamen ein"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Passwort</label>
+                                    <InputText @bind-Value="Passwort" type="password" class="form-control" id="password" placeholder="Gib dein Passwort ein"/>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-custom">Einloggen</button>
+                                </div>
+                                <p class="mt-3">
+                                    <a href="#">Passwort vergessen?</a> | <a href="/register">Noch kein Konto?</a>
+                                </p>
+                            </EditForm>
                         </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Passwort</label>
-                            <input type="password" class="form-control" id="password" placeholder="Gib dein Passwort ein">
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-custom">Einloggen</button>
-                        </div>
-                        <p class="mt-3">
-                            <a href="#">Passwort vergessen?</a> | <a href="/register">Noch kein Konto?</a>
-                        </p>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -142,10 +154,24 @@
 </script>
 
 @code {
-    [CascadingParameter] public bool ShowNavMenu { get; set; }
+    private string Benutzername { get; set; }
+    private string Passwort { get; set; }
+    private string Message { get; set; }
 
-    protected override void OnInitialized()
+
+
+    private async Task CheckUser()
     {
-        ShowNavMenu = false; // Hide NavMenu for this page
+        var user = await BenutzerRepo.ReadAsync(u => u.Benutzername == Benutzername
+                                      && u.Passwort == Passwort);
+        if (user.Any())
+        {
+            Message = "Login erfolgreich!";
+            Navigation.NavigateTo("/"); // Weiterleitung nach erfolgreichem Login
+        }
+        else
+        {
+            Message = "Ungültige Anmeldedaten!";
+        }
     }
 }
