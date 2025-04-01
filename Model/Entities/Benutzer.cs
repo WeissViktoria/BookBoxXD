@@ -28,4 +28,7 @@ public class Benutzer
     
     [Column("PROFIL_BILD")]
     public byte[]? Profilbild { get; set; }
+    
+    [Column("LOGGED_IN")]
+    public bool? loggedIn { get; set; }
 }
