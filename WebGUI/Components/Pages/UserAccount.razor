@@ -1,0 +1,101 @@
+﻿@page "/user_profile"
+@using Domain.Interfaces
+@using Model.Entities
+@inject IRepository<Benutzer> BenutzerRepo;
+
+@rendermode InteractiveServer
+
+<PageTitle>Benutzerprofil</PageTitle>
+
+<div class="profile-container">
+    <div class="profile-picture">
+        @if (string.IsNullOrEmpty(profileImageUrl))
+        {
+        <div class="placeholder-image">
+            <i class="bi bi-person-circle"></i> <!-- Optional: Icon für Platzhalter -->
+        </div>
+        }
+        else
+        {
+        <img src="@profileImageUrl" alt="Profilbild" class="rounded-circle" />
+        }
+    </div>
+    <div class="username">
+        <h2>@username</h2>
+    </div>
+    <div class="edit-button">
+        <button @onclick="EditProfile" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> Bearbeiten
+        </button>
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        margin-top: 50px;
+    }
+
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #e0e0e0; /* Grau als Hintergrund */
+    }
+
+    .profile-picture img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .placeholder-image {
+        width: 100%;
+        height: 100%;
+        background-color: #e0e0e0; /* Grau als Platzhalter */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #808080; /* Graue Farbe für das Icon */
+        font-size: 2rem;
+    }
+
+    .username {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .edit-button {
+        margin-top: 10px;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+</style>
+
+@code {
+    private string username = "Benutzer123"; // Hier kannst du den Benutzernamen dynamisch setzen
+    private string profileImageUrl = null; // Hier kannst du das Profilbild dynamisch setzen (oder null, wenn kein Bild vorhanden)
+
+    private void EditProfile()
+    {
+    // Logik zum Bearbeiten des Profils hier hinzufügen
+        Console.WriteLine("Profil bearbeiten!");
+    }
+}
