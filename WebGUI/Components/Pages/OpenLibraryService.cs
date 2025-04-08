@@ -34,6 +34,7 @@ public class OpenLibraryService
         var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>($"{API_URL}random");
         return response?.Docs ?? new List<Book>();
     }
+    
 }
 
 public class OpenLibraryResponse
@@ -48,8 +49,11 @@ public class Book
     public int? Cover_I { get; set; }
     public List<string> ISBN { get; set; }
     
-    // OLID für die eindeutige Identifikation eines Buches
-    public string Olid { get; set; }
+    public string Publisher { get; set; } // Publisher hinzufügen
+    public int First_Publish_Year { get; set; } // Veröffentlichungsdatum hinzufügen
+    public int? Number_of_Pages { get; set; } // Seitenanzahl hinzufügen
+   
+    public List<string> Subject { get; set; }
 
     // Cover-URL generieren
     public string CoverUrl => Cover_I != null ? $"https://covers.openlibrary.org/b/id/{Cover_I}-M.jpg" : null;
