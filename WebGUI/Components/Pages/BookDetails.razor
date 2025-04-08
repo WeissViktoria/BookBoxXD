@@ -46,30 +46,37 @@
                     <h3>Buchinfos</h3>
                     @if (book.Author_Name != null && book.Author_Name.Count > 0)
                     {
-                    <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
+                        <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
                     }
                     @if (!string.IsNullOrEmpty(book.First_Sentence))
                     {
-                    <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
+                        <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
                     }
                     @if (book.ISBN != null && book.ISBN.Count > 0)
                     {
-                    <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
+                        <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
                     }
                     @if (!string.IsNullOrEmpty(book.Publisher))
                     {
-                    <p><strong>Verlag:</strong> @book.Publisher</p>
+                        <p><strong>Verlag:</strong> @book.Publisher</p>
                     }
-                    
+                    @if (book.First_Publish_Year > 0)
+                    {
+                        <p><strong>Erstveröffentlichung:</strong> @book.First_Publish_Year</p>
+                    }
                     @if (book.Number_of_Pages != null)
                     {
-                    <p><strong>Seitenanzahl:</strong> @book.Number_of_Pages</p>
+                        <p><strong>Seitenanzahl:</strong> @book.Number_of_Pages</p>
                     }
-                    
                     @if (book.Subject != null && book.Subject.Count > 0)
                     {
-                    <p><strong>Fachgebiete:</strong> @string.Join(", ", book.Subject)</p>
+                        <p><strong>Fachgebiete:</strong> @string.Join(", ", book.Subject)</p>
                     }
+                    @if (book.Language != null && book.Language.Count > 0)
+                    {
+                    <p><strong>Sprache(n):</strong> @string.Join(", ", book.Language)</p>
+                    }
+                   
                 </div>
             </div>
             }
@@ -187,8 +194,8 @@
         background-color: #f9f9f9;
         padding: 20px;
         border-radius: 8px;
-        width: 30vw;
-        max-width: 600px; /* Schmalere Box */
+        width: 40vw;
+        max-width: 50vw; /* Schmalere Box */
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
