@@ -46,37 +46,53 @@
                     <h3>Buchinfos</h3>
                     @if (book.Author_Name != null && book.Author_Name.Count > 0)
                     {
-                        <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
+                    <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
                     }
                     @if (!string.IsNullOrEmpty(book.First_Sentence))
                     {
-                        <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
+                    <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
                     }
                     @if (book.ISBN != null && book.ISBN.Count > 0)
                     {
-                        <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
+                    <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
                     }
                     @if (!string.IsNullOrEmpty(book.Publisher))
                     {
-                        <p><strong>Verlag:</strong> @book.Publisher</p>
+                    <p><strong>Verlag:</strong> @book.Publisher</p>
                     }
                     @if (book.First_Publish_Year > 0)
                     {
-                        <p><strong>Erstveröffentlichung:</strong> @book.First_Publish_Year</p>
+                    <p><strong>Erstveröffentlichung:</strong> @book.First_Publish_Year</p>
                     }
                     @if (book.Number_of_Pages != null)
                     {
-                        <p><strong>Seitenanzahl:</strong> @book.Number_of_Pages</p>
+                    <p><strong>Seitenanzahl:</strong> @book.Number_of_Pages</p>
                     }
                     @if (book.Subject != null && book.Subject.Count > 0)
                     {
-                        <p><strong>Fachgebiete:</strong> @string.Join(", ", book.Subject)</p>
+                    <p><strong>Fachgebiete:</strong> @string.Join(", ", book.Subject)</p>
                     }
                     @if (book.Language != null && book.Language.Count > 0)
                     {
                     <p><strong>Sprache(n):</strong> @string.Join(", ", book.Language)</p>
                     }
-                   
+
+                    <!-- Bewertung hinzufügen -->
+                    <div class="rating-section">
+                        <h4>Bewertung:</h4>
+                        <div class="stars">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                            <i class="bi @((i <= rating) ? "bi-star-fill" : "bi-star")" @onclick="() => SetRating(i)"></i>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Rezension hinzufügen -->
+                    <div class="review-section">
+                        <h4>Deine Rezension:</h4>
+                        <textarea @bind="reviewText" rows="4" placeholder="Schreibe deine Rezension hier..."></textarea>
+                    </div>
                 </div>
             </div>
             }
@@ -210,6 +226,31 @@
         margin: 15px 0;
         line-height: 1.6;
     }
+
+    /* Styling für die Sternebewertung */
+    .rating-section {
+        margin-top: 20px;
+    }
+
+    .stars i {
+        color: #FFD700;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    /* Rezensionstextarea */
+    .review-section {
+        margin-top: 20px;
+    }
+
+    .review-section textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+        resize: vertical;
+    }
 </style>
 
 @code {
@@ -219,6 +260,10 @@ public int Cover_I { get; set; }
 private Book book;
 private bool isLoading = true;
 private string errorMessage;
+
+// Bewertung und Rezension
+private int rating = 0;  // Standardwert für Rating
+private string reviewText = "";  // Rezensionstext
 
 protected override async Task OnInitializedAsync()
 {
@@ -248,5 +293,10 @@ Console.WriteLine("Buch wurde geliket.");
 private void MarkAsRead(Book book)
 {
 Console.WriteLine("Buch als gelesen markiert.");
+}
+
+private void SetRating(int star)
+{
+rating = star;
 }
 }
