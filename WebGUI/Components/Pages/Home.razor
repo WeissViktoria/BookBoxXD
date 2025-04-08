@@ -1,6 +1,10 @@
 ﻿@page "/"
+@using Domain.Interfaces
+@using Model.Entities
 @inject OpenLibraryService BookService
 @inject NavigationManager Navigation
+@inject IRepository<Buch> BookRepository;
+
 @rendermode InteractiveServer
 
 <head>
@@ -59,7 +63,20 @@
         gap: 10px;
         opacity: 0;
         transition: opacity 0.3s;
+        z-index: 10;  /* Add this line */
     }
+
+    .overlay button {
+        background-color: rgba(255, 0, 0, 0.5); /* Temporarily add a red background */
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
 
     .book-cover:hover .overlay {
         opacity: 1;
@@ -100,7 +117,19 @@ else if (books != null)
             <div class="book-cover">
                 <img src="@book.CoverUrl" alt="@book.Title" />
                 <div class="overlay">
-                    <button @onclick="() => LikeBook(book)"><i class="bi bi-heart"></i></button>
+                    <button @onclick="() => LikeBook(book)">
+                        @{
+                            string iconClass = "bi-heart";
+                            string iconColor = "white";
+
+                            if (likedBooks.Contains(book.Olid))
+                            {
+                                iconClass = "bi-heart-fill";
+                                iconColor = "red";
+                            }
+                        }
+                        <i class="bi @iconClass" style="color: @iconColor"></i>
+                    </button>
                     <button @onclick="() => NavigateTo(book.Cover_I)">
                         <i class="bi bi-book-half"></i>
                     </button>
@@ -116,6 +145,8 @@ else if (books != null)
     private string errorMessage;
     private string searchQuery;
     private bool showSearchField = false;
+    private HashSet<string> likedBooks = new(); // z. B. Olid als Key
+
 
     private async Task LoadRandomBooks()
     {
@@ -167,11 +198,6 @@ else if (books != null)
         if (!showSearchField) searchQuery = string.Empty;
     }
 
-    private void LikeBook(Book book)
-    {
-        // Like-Logik implementieren
-    }
-
     private void NavigateTo(int? coverId)
     {
         if (coverId != null)
@@ -179,4 +205,51 @@ else if (books != null)
             Navigation.NavigateTo($"/book_details/{coverId}");
         }
     }
+    
+    private async Task LikeBook(Book book)
+    {
+        Console.WriteLine($"Liking book: {book.Title}");
+    
+        // Überprüfen, ob das Buch bereits in likedBooks enthalten ist
+        if (!likedBooks.Contains(book.Olid))
+        {
+            likedBooks.Add(book.Olid);
+
+            // Erstellen des neuen Buch-Objekts für die Datenbank
+            var neuesBuch = new Model.Entities.Buch
+            {
+                Titel = book.Title,
+                Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
+                Beschreibung = null,
+                Erster_Satz = book.First_Sentence,
+                CoverURL = book.CoverUrl,
+                ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
+                Olid = book.Olid // Falls du das ins Entity eingebaut hast
+            };
+
+            // Versuchen, das Buch zu speichern
+            await CreateBook(neuesBuch);
+        }
+        else
+        {
+            Console.WriteLine($"Das Buch {book.Title} wurde bereits als Favorit markiert.");
+        }
+    }
+
+    private async Task CreateBook(Model.Entities.Buch neuesBuch)
+    {
+        try
+        {
+            // Versuchen, das Buch in die Datenbank zu speichern
+            await BookRepository.CreateAsync(neuesBuch); 
+            Console.WriteLine($"Buch erfolgreich gespeichert: {neuesBuch.Titel}");
+        }
+        catch (Exception ex)
+        {
+            // Fehlerbehandlung
+            Console.WriteLine($"Fehler beim Speichern des Buches: {ex.Message}");
+        }
+    }
+
+
 }

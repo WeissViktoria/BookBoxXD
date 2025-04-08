@@ -18,13 +18,20 @@ public class Buch
     [Column("AUTOR")]
     public string Autor { get; set; }
     
+    [Column("BESCHREIBUNG")]
+    public string? Beschreibung { get; set; }
+    
     [Column("ERSTER_SATZ")]
-    public string Erster_Satz { get; set; }
+    public string? Erster_Satz { get; set; }
     
     [Column("COVER_URL")]
-    public string CoverURL { get; set; }
+    public string? CoverURL { get; set; }
     
     [Column("ISBN")]
-    public string ISBN { get; set; }
+    public string? ISBN { get; set; }
+    
+    [Column("OLID")]
+    public string Olid { get; set; }
+
 
 }
