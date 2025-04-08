@@ -1,11 +1,12 @@
-﻿@page "/book_details/{Olid}"
+﻿@page "/book_details/{Cover_I:int}"
+
 @inject OpenLibraryService BookService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <PageTitle>Buchdetails</PageTitle>
 
-<div class="book-details">
+<div class="book-details" style="padding: 20px;">
     @if (isLoading)
     {
         <p>Lade Buchdetails...</p>
@@ -17,15 +18,25 @@
     else if (book != null)
     {
         <h2>@book.Title</h2>
-        <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
-        <p><strong>Erste Satz:</strong> @book.First_Sentence</p>
+        @if (book.Author_Name != null && book.Author_Name.Count > 0)
+        {
+            <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
+        }
+        @if (!string.IsNullOrEmpty(book.First_Sentence))
+        {
+            <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
+        }
         <img src="@book.CoverUrl" alt="@book.Title" width="200" />
+        @if (book.ISBN != null && book.ISBN.Count > 0)
+        {
+            <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
+        }
     }
 </div>
 
 @code {
     [Parameter]
-    public string Olid { get; set; }
+    public int Cover_I { get; set; }
 
     private Book book;
     private bool isLoading = true;
@@ -35,15 +46,15 @@
     {
         try
         {
-            book = await BookService.GetBookByOlid(Olid);
+            book = await BookService.GetBookByCoverId(Cover_I);
             if (book == null)
             {
-                errorMessage = "Buch nicht gefunden";
+                errorMessage = "Buch nicht gefunden.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Fehler: {ex.Message}";
+            errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
         }
         finally
         {
