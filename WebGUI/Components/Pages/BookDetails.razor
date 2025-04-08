@@ -1,56 +1,53 @@
-﻿@page "/book_details/{CoverId:int}"
+﻿@page "/book_details/{Olid}"
 @inject OpenLibraryService BookService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
 
-<PageTitle>Book Details</PageTitle>
+<PageTitle>Buchdetails</PageTitle>
 
-<div class="container">
+<div class="book-details">
     @if (isLoading)
     {
-    <p>Lade Buchdetails...</p>
+        <p>Lade Buchdetails...</p>
     }
     else if (errorMessage != null)
     {
-    <p style="color: red;">@errorMessage</p>
+        <p style="color: red;">@errorMessage</p>
     }
     else if (book != null)
     {
-    <h2>@book.Title</h2>
-    <img src="@book.CoverUrl" alt="@book.Title" style="width: 200px; height: 300px; object-fit: cover;" />
-    <p><strong>Autor:</strong> @book.Author_Name</p>
-    <button @onclick="LikeBook" class="btn" style="background-color: #F2ACC4;">
-        <i class="bi bi-heart"></i> Gefällt mir
-    </button>
+        <h2>@book.Title</h2>
+        <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
+        <p><strong>Erste Satz:</strong> @book.First_Sentence</p>
+        <img src="@book.CoverUrl" alt="@book.Title" width="200" />
     }
 </div>
 
 @code {
-[Parameter] public int CoverId { get; set; }
-private Book book;
-private bool isLoading = true;
-private string errorMessage;
+    [Parameter]
+    public string Olid { get; set; }
 
-protected override async Task OnInitializedAsync()
-{
-try
-{
-book = await BookService.GetBookById(CoverId);
-if (book == null)
-{
-errorMessage = "Buch nicht gefunden";
-}
-}
-catch (Exception ex)
-{
-errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
-}
-finally
-{
-isLoading = false;
-}
-}
+    private Book book;
+    private bool isLoading = true;
+    private string errorMessage;
 
-private void LikeBook()
-{
-// Implementieren Sie die Like-Logik hier
-}
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            book = await BookService.GetBookByOlid(Olid);
+            if (book == null)
+            {
+                errorMessage = "Buch nicht gefunden";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
 }

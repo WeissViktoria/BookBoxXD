@@ -17,3 +17,7 @@ VALUES ('JuliaSchmidt', 'Passw0rd!', 'julia.schmidt@example.com', '1995-03-10');
 -- Benutzer 5
 INSERT INTO BENUTZER (BENUTZER_NAME, PASSWORT, EMAIL_ADDRESSE, GEBURTSTAG)
 VALUES ('StefanMüller', 'Müller@2025', 'stefan.mueller@example.com', '1988-12-04');
+
+
+ALTER TABLE BENUTZER
+    ADD COLUMN LOGGED_IN BOOLEAN DEFAULT FALSE;

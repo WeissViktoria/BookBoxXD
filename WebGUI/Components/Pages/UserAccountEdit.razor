@@ -1,0 +1,105 @@
+﻿@page "/edit-profile"
+@using Domain.Interfaces
+@using Model.Entities
+@using Microsoft.AspNetCore.Components.Forms
+@inject IRepository<Benutzer> BenutzerRepo
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+
+<PageTitle>Profil bearbeiten</PageTitle>
+
+@if (user != null)
+{
+    <div class="user-profile-edit">
+        <label for="fileInput" class="profile-picture-edit">
+            @if (user.Profilbild == null)
+            {
+                <div class="placeholder-image-edit">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+            }
+            else
+            {
+                <img src="@GetImageSrc(user.Profilbild)" alt="Profilbild" />
+            }
+        </label>
+
+        <!-- Hidden file input, triggered by clicking the profile picture -->
+        <InputFile id="fileInput" OnChange="HandleFileSelected" style="display: none;" />
+
+        <h3>Benutzername</h3>
+        <input type="text" @bind="user.Benutzername" placeholder="Benutzername" />
+
+        <button @onclick="SaveProfile">Speichern</button>
+    </div>
+}
+else
+{
+    <p>Kein Benutzer eingeloggt.</p>
+}
+
+@code {
+    private Benutzer user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await GetLoggedInUser();
+    }
+
+    private async Task<Benutzer> GetLoggedInUser()
+    {
+        var loggedInUsers = await BenutzerRepo.ReadAsync(b => b.loggedIn == true);
+        return loggedInUsers.First();
+    }
+
+    private async Task<byte[]> ConvertImageToByteArray(string imagePath)
+    {
+        return await File.ReadAllBytesAsync(imagePath);
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var imagePath = await UploadImage(file);
+            var imageBytes = await ConvertImageToByteArray(imagePath);
+            user.Profilbild = imageBytes;
+            await SaveProfile(); // Auto-save after selecting an image
+        }
+    }
+
+    private async Task<string> UploadImage(IBrowserFile file)
+    {
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.Name)}";
+        var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img");
+        var filePath = Path.Combine(directoryPath, fileName);
+
+        // Ensure the directory exists
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+        
+        using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)) // max 10MB
+        using (var fileStream = File.Create(filePath))
+        {
+            await stream.CopyToAsync(fileStream);
+        }
+
+        return $"/img/{fileName}";
+    }
+
+    private async Task SaveProfile()
+    {
+        await BenutzerRepo.UpdataAsync(user);
+        Navigation.NavigateTo("/user-profile");
+    }
+    
+    private string GetImageSrc(byte[]? imageData)
+    {
+        if (imageData == null) return "default-placeholder.png"; // Fallback image
+        return $"data:image/png;base64,{Convert.ToBase64String(imageData)}";
+    }
+}
