@@ -1,4 +1,5 @@
 using Domain.Interfaces;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Model.Configurations;
 using Model.Entities;
@@ -20,7 +21,6 @@ builder.Services.AddDbContextFactory<BuchContext>(
 
 builder.Services.AddScoped<IRepository<Buch>, BookRepository>();
 builder.Services.AddScoped<IRepository<Benutzer>, BenutzerRepository>();
-
 
 builder.Services.AddHttpClient<OpenLibraryService>();
 

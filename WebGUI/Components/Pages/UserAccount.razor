@@ -1,0 +1,123 @@
+﻿@page "/user-profile"
+@using Domain.Interfaces
+@using Model.Entities
+@inject OpenLibraryService BookService
+@inject NavigationManager Navigation
+@inject IRepository<Benutzer> BenutzerRepo
+@rendermode InteractiveServer
+
+
+<PageTitle>Benutzer Profil</PageTitle>
+
+<style>
+    .user-profile {
+        text-align: center; /* Zentriert den gesamten Inhalt */
+        padding: 20px;
+    }
+
+    .profile-picture {
+        display: inline-block;
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    .profile-picture img {
+        width: 200px; /* Bildgröße anpassen */
+        height: 200px; /* Bildgröße anpassen */
+        border-radius: 50%; /* Runde Ecken */
+        border: 4px solid #ccc; /* Sichtbare Outline */
+        object-fit: cover;
+        margin: 0 auto; /* Bild in der Mitte */
+    }
+
+    .placeholder-image {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 4px solid #ccc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 50px; /* Größe des Icons anpassen */
+        background-color: #f0f0f0;
+    }
+
+    h3 {
+        margin-top: 10px;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background-color: #F2ACC4;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    button:hover {
+        background-color: #e09bb3;
+    }
+
+</style>
+
+@if (user != null)
+{
+    <div class="user-profile">
+        <div class="profile-picture">
+            @if (user.Profilbild == null)
+            {
+                <div class="placeholder-image">
+                    <i class="bi bi-person-circle"></i> <!-- Optional: Icon für Platzhalter -->
+                </div>
+            }
+            else
+            {
+                <img src="@GetImageSrc(user.Profilbild)" alt="Profilbild" />
+            }
+        </div>
+        <h3>@user.Benutzername</h3>
+        <button @onclick="EditProfile">Bearbeiten</button>
+    </div>
+}
+else
+{
+    <p>Kein Benutzer eingeloggt.</p>
+}
+
+@code {
+    private Benutzer user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await GetLoggedInUser();
+    }
+
+    private async Task<Benutzer> GetLoggedInUser()
+    {
+        var loggedInUser = await BenutzerRepo.ReadAsync(b => b.loggedIn == true);
+
+        if (loggedInUser.Any())
+        {
+            return loggedInUser.First(); // Der erste Benutzer, der eingeloggt ist
+        }
+
+        return null; // Falls keiner eingeloggt ist
+    }
+
+    private void EditProfile()
+    {
+        // Hier kannst du die Logik hinzufügen, um das Benutzerprofil zu bearbeiten
+        Navigation.NavigateTo("/edit-profile");
+    }
+    
+    private string GetImageSrc(byte[]? imageData)
+    {
+        if (imageData == null) return "default-placeholder.png"; // Fallback image
+        return $"data:image/png;base64,{Convert.ToBase64String(imageData)}";
+    }
+}

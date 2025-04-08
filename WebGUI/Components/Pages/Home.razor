@@ -86,28 +86,28 @@
 
 @if (isLoading)
 {
-<p style="padding: 5px">Lade Bücher...</p>
+    <p style="padding: 5px">Lade Bücher...</p>
 }
 else if (errorMessage != null)
 {
-<p style="color: red;">@errorMessage</p>
+    <p style="color: red;">@errorMessage</p>
 }
 else if (books != null)
 {
-<div class="book-covers" style="padding: 20px">
-    @foreach (var book in books)
-    {
-    <div class="book-cover">
-        <img src="@book.CoverUrl" alt="@book.Title" />
-        <div class="overlay">
-            <button @onclick="() => LikeBook(book)"><i class="bi bi-heart"></i></button>
-            <button @onclick="() => NavigateTo(book.Cover_I)">
-                <i class="bi bi-book-half"></i>
-            </button>
+    <div class="book-covers" style="padding: 20px">
+        @foreach (var book in books)
+        {
+        <div class="book-cover">
+            <img src="@book.CoverUrl" alt="@book.Title" />
+            <div class="overlay">
+                <button @onclick="() => LikeBook(book)"><i class="bi bi-heart"></i></button>
+                <button @onclick="() => NavigateTo(book.Olid)">
+                    <i class="bi bi-book-half"></i>
+                </button>
+            </div>
         </div>
+        }
     </div>
-    }
-</div>
 }
 
 @code {
@@ -119,62 +119,62 @@ else if (books != null)
 
     private async Task LoadRandomBooks()
     {
-    isLoading = true;
-    errorMessage = null;
-    try
-    {
-    books = await BookService.GetAllBooks();
-    if (books != null && books.Count > 56)
-    {
-    var random = new Random();
-    books = books.OrderBy(b => random.Next()).Take(56).ToList();
-    }
-    }
-    catch (Exception ex)
-    {
-    errorMessage = $"Fehler: {ex.Message}";
-    }
-    finally
-    {
-    isLoading = false;
-    }
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            books = await BookService.GetAllBooks();
+            if (books != null && books.Count > 56)
+            {
+                var random = new Random();
+                books = books.OrderBy(b => random.Next()).Take(56).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task FetchBooks()
     {
-    isLoading = true;
-    try
-    {
-    books = await BookService.SearchBooks(searchQuery);
-    if (books == null || books.Count == 0)
-    {
-    errorMessage = "Keine Bücher gefunden";
-    }
-    }
-    catch (Exception ex)
-    {
-    errorMessage = $"Fehler bei der Suche: {ex.Message}";
-    }
-    finally
-    {
-    isLoading = false;
-    }
+        isLoading = true;
+        try
+        {
+            books = await BookService.SearchBooks(searchQuery);
+            if (books == null || books.Count == 0)
+            {
+                errorMessage = "Keine Bücher gefunden";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fehler bei der Suche: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private void ShowSearchField()
     {
-    showSearchField = !showSearchField;
-    if (!showSearchField) searchQuery = string.Empty;
+        showSearchField = !showSearchField;
+        if (!showSearchField) searchQuery = string.Empty;
     }
 
     private void LikeBook(Book book)
     {
-    // Like-Logik implementieren
+        // Like-Logik implementieren
     }
 
-    private void NavigateTo(int? coverId)
+    private void NavigateTo(string olid)
     {
-    Navigation.NavigateTo($"book_details/{coverId}", forceLoad: true);
+        // Navigiere zu einer Seite mit den Buchdetails unter Verwendung der OLID
+        Navigation.NavigateTo($"book_details/{olid}", forceLoad: true);
     }
-
 }
