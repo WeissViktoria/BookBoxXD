@@ -21,19 +21,12 @@ public class OpenLibraryService
         return response?.Docs ?? new List<Book>();
     }
 
-    // Gibt ein Buch anhand seiner OLID zurück
-    public async Task<Book> GetBookByOlid(string olid)
+    public async Task<Book> GetBookByCoverId(int coverId)
     {
-        var response = await _httpClient.GetFromJsonAsync<Dictionary<string, Book>>($"{BOOK_API_URL}{olid}&format=json");
-
-        if (response != null && response.ContainsKey($"OLID:{olid}"))
-        {
-            var book = response[$"OLID:{olid}"];
-            return book;
-        }
-
-        return null;
+        var response = await GetAllBooks(); // oder SearchBooks("random") etc.
+        return response.FirstOrDefault(b => b.Cover_I == coverId);
     }
+
 
     // Lädt eine zufällige Auswahl an Büchern
     public async Task<List<Book>> GetAllBooks()

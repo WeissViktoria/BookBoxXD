@@ -14,8 +14,8 @@
     <div class="d-flex align-items-center">
         @if (showSearchField)
         {
-        <input @bind="searchQuery" placeholder="Buchtitel oder Autor eingeben" class="form-control" />
-        <button class="btn" style="background-color: #F2ACC4;" @onclick="FetchBooks">Suchen</button>
+            <input @bind="searchQuery" placeholder="Buchtitel oder Autor eingeben" class="form-control" />
+            <button class="btn" style="background-color: #F2ACC4;" @onclick="FetchBooks">Suchen</button>
         }
         <button class="btn btn-light search-icon" @onclick="ShowSearchField">
             <i class="bi bi-search"></i>
@@ -97,15 +97,15 @@ else if (books != null)
     <div class="book-covers" style="padding: 20px">
         @foreach (var book in books)
         {
-        <div class="book-cover">
-            <img src="@book.CoverUrl" alt="@book.Title" />
-            <div class="overlay">
-                <button @onclick="() => LikeBook(book)"><i class="bi bi-heart"></i></button>
-                <button @onclick="() => NavigateTo(book.Olid)">
-                    <i class="bi bi-book-half"></i>
-                </button>
+            <div class="book-cover">
+                <img src="@book.CoverUrl" alt="@book.Title" />
+                <div class="overlay">
+                    <button @onclick="() => LikeBook(book)"><i class="bi bi-heart"></i></button>
+                    <button @onclick="() => NavigateTo(book.Cover_I)">
+                        <i class="bi bi-book-half"></i>
+                    </button>
+                </div>
             </div>
-        </div>
         }
     </div>
 }
@@ -172,9 +172,11 @@ else if (books != null)
         // Like-Logik implementieren
     }
 
-    private void NavigateTo(string olid)
+    private void NavigateTo(int? coverId)
     {
-        // Navigiere zu einer Seite mit den Buchdetails unter Verwendung der OLID
-        Navigation.NavigateTo($"book_details/{olid}", forceLoad: true);
+        if (coverId != null)
+        {
+            Navigation.NavigateTo($"/book_details/{coverId}");
+        }
     }
 }
