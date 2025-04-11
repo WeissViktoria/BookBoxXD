@@ -155,9 +155,6 @@ else if (books != null)
     {
         isLoading = true;
         errorMessage = null;
-        
-       
-        
         try
         {
             books = await BookService.GetAllBooks();
@@ -212,50 +209,68 @@ else if (books != null)
         }
     }
     
-    private async Task LikeBook(Book book)
+private async Task LikeBook(Book book)
+{
+    Console.WriteLine($"Liking book: {book.Title}");
+
+    var coverId = book.Cover_I.Value;
+
+    var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+    if (currentUser == null)
     {
-        Console.WriteLine($"Liking book: {book.Title}");
-    
-        /*
-        if (!likedCoverIds.Contains(book.Cover_I))
+        Console.WriteLine("Kein eingeloggter Benutzer gefunden!");
+        return;
+    }
+
+    // Prüfen ob bereits als geliked gespeichert
+    if (likedCoverIds.Contains(coverId))
+    {
+        // Entfernen
+        var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
+        if (bestehendesBuch != null)
         {
-            likedCoverIds.Add(book.Cover_I);
-            */
-
-            var neuesBuch = new Buch
-            {  
-                Titel = book.Title,
-                Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
-                Beschreibung = null,
-                Erster_Satz = book.First_Sentence,
-                CoverURL = book.CoverUrl,
-                ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
-                Olid = book.Cover_I?.ToString()
-
-            };
-
-            await BookRepository.CreateAsync(neuesBuch);
-            var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
-
-            if (currentUser == null)
+            var beziehung = (await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id)).FirstOrDefault();
+            if (beziehung != null)
             {
-                Console.WriteLine("Kein eingeloggter Benutzer gefunden!");
-                return; 
+                await BeziehungsRepo.DeleteAsync(beziehung);
             }
-            
+            await BookRepository.DeleteAsync(bestehendesBuch);
+        }
+        likedCoverIds.Remove(coverId);
+    }
+    else
+    {
+        // Hinzufügen
+        likedCoverIds.Add(coverId);
+
+        var neuesBuch = new Buch
+        {
+            Titel = book.Title,
+            Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
+            Beschreibung = null,
+            Erster_Satz = book.First_Sentence,
+            CoverURL = book.CoverUrl,
+            ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
+            Olid = coverId.ToString()
+        };
+
+        await BookRepository.CreateAsync(neuesBuch);
+
+        var gespeichertesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
+
+        if (gespeichertesBuch != null)
+        {
             var beziehung = new BuchBeziehung_JT
             {
-                BuchId = neuesBuch.Id,
+                BuchId = gespeichertesBuch.Id,
                 BenutzerId = currentUser.Id,
                 Status = BuchStatus.Favoriten,
                 Anfangsdatum = DateTime.Now
             };
-            
+
             await BeziehungsRepo.CreateAsync(beziehung);
-        
-        /*else
-        {
-            Console.WriteLine($"Das Buch {book.Title} wurde bereits als Favorit markiert.");
-        }*/
+        }
     }
+}
+
 }
