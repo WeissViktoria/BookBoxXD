@@ -4,12 +4,15 @@
 @inject OpenLibraryService BookService
 @inject NavigationManager Navigation
 @inject IRepository<Buch> BookRepository;
+@inject IRepository<Benutzer> BenutzerRepo;
+@inject IRepository<BuchBeziehung_JT> BeziehungsRepo;
+
 
 @rendermode InteractiveServer
 
-<head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-</head>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
 
 <PageTitle>Buch Übersicht</PageTitle>
 
@@ -122,7 +125,7 @@ else if (books != null)
                             string iconClass = "bi-heart";
                             string iconColor = "white";
 
-                            if (likedBooks.Contains(book.Olid))
+                            if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
                             {
                                 iconClass = "bi-heart-fill";
                                 iconColor = "red";
@@ -145,13 +148,24 @@ else if (books != null)
     private string errorMessage;
     private string searchQuery;
     private bool showSearchField = false;
-    private HashSet<string> likedBooks = new(); // z. B. Olid als Key
+    private List<int> likedCoverIds = new();
 
 
     private async Task LoadRandomBooks()
     {
         isLoading = true;
         errorMessage = null;
+        
+        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+        if (currentUser != null)
+        {
+            var beziehungen = await BeziehungsRepo.ReadAllAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+            likedCoverIds = beziehungen
+                .Where(b => b.Buch != null && b.Buch.Cover_I.HasValue)
+                .Select(b => b.Buch.Cover_I.Value)
+                .ToList();
+        }
+        
         try
         {
             books = await BookService.GetAllBooks();
@@ -210,46 +224,44 @@ else if (books != null)
     {
         Console.WriteLine($"Liking book: {book.Title}");
     
-        // Überprüfen, ob das Buch bereits in likedBooks enthalten ist
-        if (!likedBooks.Contains(book.Olid))
+        if (!likedCoverIds.Contains(book.Cover_I))
         {
-            likedBooks.Add(book.Olid);
+            likedCoverIds.Add(book.Cover_I);
 
-            // Erstellen des neuen Buch-Objekts für die Datenbank
-            var neuesBuch = new Model.Entities.Buch
-            {
+            var neuesBuch = new Buch
+            {  
                 Titel = book.Title,
                 Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
                 Beschreibung = null,
                 Erster_Satz = book.First_Sentence,
                 CoverURL = book.CoverUrl,
                 ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
-                Olid = book.Olid // Falls du das ins Entity eingebaut hast
+                Olid = book.Cover_I?.ToString()
+
             };
 
-            // Versuchen, das Buch zu speichern
-            await CreateBook(neuesBuch);
+            await BookRepository.CreateAsync(neuesBuch);
+            var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+
+            if (currentUser == null)
+            {
+                Console.WriteLine("Kein eingeloggter Benutzer gefunden!");
+                return; 
+            }
+            
+            var beziehung = new BuchBeziehung_JT
+            {
+                BuchId = neuesBuch.Id,
+                BenutzerId = currentUser.Id,
+                Status = BuchStatus.Favoriten,
+                Anfangsdatum = DateTime.Now
+            };
+            
+            await BeziehungsRepo.CreateAsync(beziehung);
         }
         else
         {
             Console.WriteLine($"Das Buch {book.Title} wurde bereits als Favorit markiert.");
         }
     }
-
-    private async Task CreateBook(Model.Entities.Buch neuesBuch)
-    {
-        try
-        {
-            // Versuchen, das Buch in die Datenbank zu speichern
-            await BookRepository.CreateAsync(neuesBuch); 
-            Console.WriteLine($"Buch erfolgreich gespeichert: {neuesBuch.Titel}");
-        }
-        catch (Exception ex)
-        {
-            // Fehlerbehandlung
-            Console.WriteLine($"Fehler beim Speichern des Buches: {ex.Message}");
-        }
-    }
-
-
 }
