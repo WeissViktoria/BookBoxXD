@@ -21,6 +21,8 @@ builder.Services.AddDbContextFactory<BuchContext>(
 
 builder.Services.AddScoped<IRepository<Buch>, BookRepository>();
 builder.Services.AddScoped<IRepository<Benutzer>, BenutzerRepository>();
+builder.Services.AddScoped<IRepository<BuchBeziehung_JT>, BeziehungRepository>();
+
 
 builder.Services.AddHttpClient<OpenLibraryService>();
 
