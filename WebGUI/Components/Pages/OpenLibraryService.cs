@@ -35,6 +35,53 @@ public class OpenLibraryService
         var response = await _httpClient.GetFromJsonAsync<OpenLibraryResponse>($"{API_URL}random");
         return response?.Docs ?? new List<Book>();
     }
+    
+    public async Task<Book> GetBookDetailsByKey(string key)
+    {
+        var response = await _httpClient.GetFromJsonAsync<Dictionary<string, object>>($"https://openlibrary.org{key}.json");
+
+        if (response != null)
+        {
+            var book = new Book
+            {
+                Title = response.GetValueOrDefault("title")?.ToString(),
+
+                Author_Name = response.GetValueOrDefault("authors") is List<object> authors && authors != null
+                    ? authors.Select(a => ((Dictionary<string, object>)a).GetValueOrDefault("name")?.ToString()).ToList()
+                    : new List<string>(),
+
+                First_Sentence = response.GetValueOrDefault("first_sentence")?.ToString(),
+            
+                Publisher = response.GetValueOrDefault("publishers") is List<object> publishers && publishers != null
+                    ? publishers.FirstOrDefault()?.ToString()
+                    : null,
+
+                First_Publish_Year = Convert.ToInt32(response.GetValueOrDefault("first_publish_year") ?? 0),
+            
+                Subject = response.GetValueOrDefault("subject") is List<object> subject && subject != null
+                    ? subject.Select(s => s.ToString()).ToList()
+                    : new List<string>(),
+
+                Number_of_Pages = Convert.ToInt32(response.GetValueOrDefault("number_of_pages") ?? 0),
+            
+                ISBN = response.GetValueOrDefault("isbn") is List<object> isbn && isbn != null
+                    ? isbn.Select(i => i.ToString()).ToList()
+                    : new List<string>(),
+
+                // Fetching language information
+                Language = response.GetValueOrDefault("languages") is List<object> languages && languages != null
+                    ? languages.Select(l => l.ToString()).ToList()
+                    : new List<string>()
+            };
+
+            return book;
+        }
+
+        return null;
+    }
+
+
+    
 }
 
 public class OpenLibraryResponse
@@ -49,8 +96,11 @@ public class Book
     public int? Cover_I { get; set; }
     public List<string> ISBN { get; set; }
     
-    // OLID für die eindeutige Identifikation eines Buches
-    public string Olid { get; set; }
+    public string Publisher { get; set; } // Publisher hinzufügen
+    public int First_Publish_Year { get; set; } // Veröffentlichungsdatum hinzufügen
+    public int? Number_of_Pages { get; set; } // Seitenanzahl hinzufügen
+    public List<string> Language { get; set; }
+    public List<string> Subject { get; set; }
 
     // Cover-URL generieren
     public string CoverUrl => Cover_I != null ? $"https://covers.openlibrary.org/b/id/{Cover_I}-M.jpg" : null;
