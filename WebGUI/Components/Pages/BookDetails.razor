@@ -1,64 +1,302 @@
 ﻿@page "/book_details/{Cover_I:int}"
-
 @inject OpenLibraryService BookService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <PageTitle>Buchdetails</PageTitle>
 
-<div class="book-details" style="padding: 20px;">
-    @if (isLoading)
-    {
-        <p>Lade Buchdetails...</p>
-    }
-    else if (errorMessage != null)
-    {
-        <p style="color: red;">@errorMessage</p>
-    }
-    else if (book != null)
-    {
-        <h2>@book.Title</h2>
-        @if (book.Author_Name != null && book.Author_Name.Count > 0)
-        {
-            <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
-        }
-        @if (!string.IsNullOrEmpty(book.First_Sentence))
-        {
-            <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
-        }
-        <img src="@book.CoverUrl" alt="@book.Title" width="200" />
-        @if (book.ISBN != null && book.ISBN.Count > 0)
-        {
-            <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
-        }
-    }
+<div class="page-container">
+    <div class="book-details-container">
+
+        <!-- Neue Section für den Titel oben -->
+        <div class="book-title-section">
+            @if (book != null)
+            {
+            <h1>@book.Title</h1>
+            }
+        </div>
+
+        <div class="book-cover-section">
+            @if (isLoading)
+            {
+            <p>Lade Buchdetails...</p>
+            }
+            else if (errorMessage != null)
+            {
+            <p style="color: red;">@errorMessage</p>
+            }
+            else if (book != null)
+            {
+            <div class="book-cover-wrapper">
+                <div class="book-cover">
+                    <img src="@book.CoverUrl" alt="@book.Title" class="book-cover-img" />
+                    <div class="overlay">
+                        <button @onclick="() => LikeBook(book)">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <button @onclick="() => MarkAsRead(book)">
+                            <i class="bi bi-bookmark-check"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="book-info-section">
+                <div class="info-box">
+                    <h3>Buchinfos</h3>
+                    @if (book.Author_Name != null && book.Author_Name.Count > 0)
+                    {
+                    <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
+                    }
+                    @if (!string.IsNullOrEmpty(book.First_Sentence))
+                    {
+                    <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
+                    }
+                    @if (book.ISBN != null && book.ISBN.Count > 0)
+                    {
+                    <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
+                    }
+                    @if (!string.IsNullOrEmpty(book.Publisher))
+                    {
+                    <p><strong>Verlag:</strong> @book.Publisher</p>
+                    }
+                    @if (book.First_Publish_Year > 0)
+                    {
+                    <p><strong>Erstveröffentlichung:</strong> @book.First_Publish_Year</p>
+                    }
+                    @if (book.Number_of_Pages != null)
+                    {
+                    <p><strong>Seitenanzahl:</strong> @book.Number_of_Pages</p>
+                    }
+                    @if (book.Subject != null && book.Subject.Count > 0)
+                    {
+                    <p><strong>Fachgebiete:</strong> @string.Join(", ", book.Subject)</p>
+                    }
+                    @if (book.Language != null && book.Language.Count > 0)
+                    {
+                    <p><strong>Sprache(n):</strong> @string.Join(", ", book.Language)</p>
+                    }
+
+                    <!-- Bewertung hinzufügen -->
+                    <div class="rating-section">
+                        <h4>Bewertung:</h4>
+                        <div class="stars">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                            <i class="bi @((i <= rating) ? "bi-star-fill" : "bi-star")" @onclick="() => SetRating(i)"></i>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Rezension hinzufügen -->
+                    <div class="review-section">
+                        <h4>Deine Rezension:</h4>
+                        <textarea @bind="reviewText" rows="4" placeholder="Schreibe deine Rezension hier..."></textarea>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
 </div>
 
-@code {
-    [Parameter]
-    public int Cover_I { get; set; }
-
-    private Book book;
-    private bool isLoading = true;
-    private string errorMessage;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            book = await BookService.GetBookByCoverId(Cover_I);
-            if (book == null)
-            {
-                errorMessage = "Buch nicht gefunden.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
+<style>
+    .page-container {
+        height: 100vh;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        background-color: white;
     }
+
+    .book-details-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        flex-direction: column;
+    }
+
+    /* Neue Section für den Titel */
+    .book-title-section {
+        padding: 5px;
+        padding-bottom: 30px;
+        width: 100%;
+    }
+
+    .book-title-section h2 {
+        margin: 0;
+        font-size: 2rem;
+        color: #333;
+    }
+
+    .book-cover-section {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .book-cover-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .book-cover {
+        position: relative;
+        width: 250px;
+        height: auto;
+        margin: 0;
+    }
+
+    .book-cover-img {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        display: flex;
+        flex-direction: row; /* Geändert von column zu row */
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        border-radius: 5px;
+    }
+
+    .overlay button {
+        background-color: #F2ACC4;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .book-cover:hover .overlay {
+        opacity: 1;
+    }
+
+    .book-info-section {
+        flex: 1;
+        padding-left: 20px; /* Oben mehr Platz */
+        height: 100%;
+        margin-left: 0;
+        background-color: white;
+    }
+
+    .info-box {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        width: 40vw;
+        max-width: 50vw; /* Schmalere Box */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .info-box h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+    }
+
+    .info-box p {
+        margin: 15px 0;
+        line-height: 1.6;
+    }
+
+    /* Styling für die Sternebewertung */
+    .rating-section {
+        margin-top: 20px;
+    }
+
+    .stars i {
+        color: #FFD700;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    /* Rezensionstextarea */
+    .review-section {
+        margin-top: 20px;
+    }
+
+    .review-section textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+        resize: vertical;
+    }
+</style>
+
+@code {
+[Parameter]
+public int Cover_I { get; set; }
+
+private Book book;
+private bool isLoading = true;
+private string errorMessage;
+
+// Bewertung und Rezension
+private int rating = 0;  // Standardwert für Rating
+private string reviewText = "";  // Rezensionstext
+
+protected override async Task OnInitializedAsync()
+{
+try
+{
+book = await BookService.GetBookByCoverId(Cover_I);
+if (book == null)
+{
+errorMessage = "Buch nicht gefunden.";
+}
+}
+catch (Exception ex)
+{
+errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
+}
+finally
+{
+isLoading = false;
+}
+}
+
+private void LikeBook(Book book)
+{
+Console.WriteLine("Buch wurde geliket.");
+}
+
+private void MarkAsRead(Book book)
+{
+Console.WriteLine("Buch als gelesen markiert.");
+}
+
+private void SetRating(int star)
+{
+rating = star;
+}
 }
