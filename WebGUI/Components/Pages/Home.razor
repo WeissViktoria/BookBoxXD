@@ -156,15 +156,7 @@ else if (books != null)
         isLoading = true;
         errorMessage = null;
         
-        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
-        if (currentUser != null)
-        {
-            var beziehungen = await BeziehungsRepo.ReadAllAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
-            likedCoverIds = beziehungen
-                .Where(b => b.Buch != null && b.Buch.Cover_I.HasValue)
-                .Select(b => b.Buch.Cover_I.Value)
-                .ToList();
-        }
+       
         
         try
         {
@@ -224,9 +216,11 @@ else if (books != null)
     {
         Console.WriteLine($"Liking book: {book.Title}");
     
+        /*
         if (!likedCoverIds.Contains(book.Cover_I))
         {
             likedCoverIds.Add(book.Cover_I);
+            */
 
             var neuesBuch = new Buch
             {  
@@ -258,10 +252,10 @@ else if (books != null)
             };
             
             await BeziehungsRepo.CreateAsync(beziehung);
-        }
-        else
+        
+        /*else
         {
             Console.WriteLine($"Das Buch {book.Title} wurde bereits als Favorit markiert.");
-        }
+        }*/
     }
 }
