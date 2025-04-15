@@ -5,68 +5,74 @@ using Model.Configurations;
 
 namespace Domain.Repo;
 
-public class ARepository<TEntity> :IRepository<TEntity> where TEntity : class
+public class ARepository<TEntity> : IRepository<TEntity> where TEntity : class
 {
-    
-    protected readonly BuchContext _context;
-    protected readonly DbSet<TEntity> _table;
+    private readonly IDbContextFactory<BuchContext> _contextFactory;
 
-    protected ARepository(BuchContext context)
+    protected ARepository(IDbContextFactory<BuchContext> contextFactory)
     {
-        _context = context;
-        _table = _context.Set<TEntity>();
+        _contextFactory = contextFactory;
     }
 
     public async Task<TEntity> CreateAsync(TEntity t)
     {
-        await _table.AddAsync(t);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Set<TEntity>().Add(t);
+        await context.SaveChangesAsync();
         return t;
     }
 
     public async Task<List<TEntity>> CreateRangeAsync(List<TEntity> list)
     {
-        await _table.AddRangeAsync(list);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Set<TEntity>().AddRange(list);
+        await context.SaveChangesAsync();
         return list;
     }
 
     public async Task UpdataAsync(TEntity t)
     {
-        _context.ChangeTracker.Clear();
-        _table.Update(t);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.ChangeTracker.Clear();
+        context.Set<TEntity>().Update(t);
+        await context.SaveChangesAsync();
     }
 
     public async Task UpdateRangeAsync(List<TEntity> list)
     {
-        _table.UpdateRange(list);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Set<TEntity>().UpdateRange(list);
+        await context.SaveChangesAsync();
     }
 
     public async Task<TEntity?> ReadAsync(int id)
     {
-        return await _table.FindAsync(id);
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Set<TEntity>().FindAsync(id);
     }
 
     public async Task<List<TEntity>> ReadAsync(Expression<Func<TEntity, bool>> filter)
     {
-        return await _table.Where(filter).ToListAsync();
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Set<TEntity>().Where(filter).ToListAsync();
     }
 
     public async Task<List<TEntity>> ReadAsync(int start, int count)
     {
-        return await _table.Skip(start).Take(count).ToListAsync();
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Set<TEntity>().Skip(start).Take(count).ToListAsync();
     }
 
     public async Task<List<TEntity>> ReadAllAsync()
     {
-        return await _table.ToListAsync();
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Set<TEntity>().ToListAsync();
     }
 
     public async Task DeleteAsync(TEntity t)
     {
-        _table.Remove(t);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Set<TEntity>().Remove(t);
+        await context.SaveChangesAsync();
     }
 }
