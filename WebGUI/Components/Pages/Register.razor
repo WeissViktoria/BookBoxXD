@@ -164,6 +164,21 @@
 @code {
     private Benutzer NewUser { get; set; } = new();
     
+    protected override async Task OnInitializedAsync()
+    {
+        await LogOutAllUsers();
+    }
+
+    private async Task LogOutAllUsers()
+    {
+        var allUsers = await BenutzerRepo.ReadAsync(u => u.loggedIn == true);
+        foreach (var user in allUsers)
+        {
+            user.loggedIn = false;
+            await BenutzerRepo.UpdateAsync(user);
+        }
+    }
+    
     private async Task CreateUser()
     {
         Console.WriteLine("CreateAsync wurde aufgerufen!");
