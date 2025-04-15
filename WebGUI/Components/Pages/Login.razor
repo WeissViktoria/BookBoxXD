@@ -132,7 +132,7 @@
                                     <button type="submit" class="btn btn-custom">Einloggen</button>
                                 </div>
                                 <p class="mt-3">
-                                    <a href="#">Passwort vergessen?</a> | <a href="/register">Noch kein Konto?</a>
+                                    <a href="#">Passwort vergessen?</a> | <a href="/">Noch kein Konto?</a>
                                 </p>
                             </EditForm>
                         </div>
@@ -174,7 +174,7 @@
             loggedInUser.loggedIn = true;
             await BenutzerRepo.UpdataAsync(loggedInUser);
             
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/home");
         }
         else
         {
