@@ -1,4 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using Domain.Interfaces
+@using Model.Entities
+@inherits LayoutComponentBase
+@inject IRepository<Benutzer> BenutzerRepo
 
 <div class="top-row ps-2 navbar navbar-dark" style="background-color: #A64365;">
     <div class="container-fluid">
@@ -32,10 +35,32 @@
     <div class="user-section text-white text-center p-3" style="position: absolute; bottom: 10px; width: 100%;">
         <a href="/user-profile" class="text-white text-decoration-none">
             <span class="bi bi-person-circle-nav-menu"></span>
-            <strong>Benutzername</strong>
+            <strong>@(user?.Benutzername ?? "Gast")</strong>
+
         </a>
     </div>
 </div>
+
+@code {
+    private Benutzer user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await GetLoggedInUser();
+    }
+    
+    private async Task<Benutzer> GetLoggedInUser()
+    {
+        var loggedInUser = await BenutzerRepo.ReadAsync(b => b.loggedIn == true);
+
+        if (loggedInUser.Any())
+        {
+            return loggedInUser.First(); // Der erste Benutzer, der eingeloggt ist
+        }
+
+        return null; // Falls keiner eingeloggt ist
+    }
+}
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
