@@ -1,5 +1,5 @@
-﻿@page "/register"
-
+﻿@page "/"
+@layout Layout.EmptyNavMenu 
 @using Domain.Interfaces
 @using Microsoft.AspNetCore.Components.Web
 @using Model.Entities
@@ -140,7 +140,7 @@
                                     <InputText @bind-Value="NewUser.Passwort" class="form-control" type="password" />
                                 </div>
 
-                                <button class="btn btn-primary" type="submit">Registrieren</button>
+                                <button class="btn btn-custom" type="submit">Registrieren</button>
                             </EditForm>
 
 
