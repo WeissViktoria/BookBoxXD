@@ -8,6 +8,7 @@
 @inject IRepository<BuchBeziehung_JT> BeziehungsRepo;
 @rendermode InteractiveServer
 
+<link href="css/bookDetails.css" rel="stylesheet" />
 
 
 <PageTitle>Buchdetails</PageTitle>
@@ -39,21 +40,31 @@
                 <div class="book-cover">
                     <img src="@book.CoverUrl" alt="@book.Title" class="book-cover-img" />
                     <div class="overlay">
-                        <button @onclick="() => LikeBook(book)">
+                        <button @onclick="() => ToggleBookStatus(book, BuchStatus.Favoriten)">
                             @{
-                            string iconClass = "bi-heart";
-                            string iconColor = "white";
+                                string LikeIconClass = "bi-heart";
+                                string LikeIconColor = "white";
 
-                            if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
-                            {
-                            iconClass = "bi-heart-fill";
-                            iconColor = "red";
+                                if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
+                                {
+                                    LikeIconClass = "bi-heart-fill";
+                                    LikeIconColor = "red";
+                                }
                             }
-                            }
-                            <i class="bi @iconClass" style="color: @iconColor"></i>
+                            <i class="bi @LikeIconClass" style="color: @LikeIconColor"></i>
                         </button>
-                        <button @onclick="() => MarkAsRead(book)">
-                            <i class="bi bi-bookmark-check"></i>
+                        <button @onclick="() => ToggleBookStatus(book, BuchStatus.Gelesen)">
+                            @{
+                                string ReadIconClass = "bi-bookmark-check";
+                                string ReadIconColor = "white";
+
+                                if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
+                                {
+                                    ReadIconClass = "bi-bookmark-check-fill";
+                                    ReadIconColor = "red";
+                                }
+                            }
+                            <i class="bi @ReadIconClass" style="color: @ReadIconColor"></i>
                         </button>
                     </div>
                 </div>
@@ -139,307 +150,128 @@
     </div>
 </div>
 
-<style>
-    .page-container {
-        height: 100vh;
-        overflow: hidden;
-        background-color: white;
-    }
-
-    .book-details-container {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    .book-title-section {
-        padding: 5px 20px 30px 20px;
-        width: 100%;
-    }
-
-    .book-title-section h1 {
-        margin: 0;
-        font-size: 2rem;
-        color: #333;
-    }
-
-    .book-cover-section {
-        display: flex;
-        align-items: flex-start;
-    }
-
-    .book-cover-wrapper {
-        display: flex;
-        flex-direction: column;
-        margin: 0 20px;
-    }
-
-    .book-cover {
-        position: relative;
-        width: 250px;
-    }
-
-    .book-cover-img {
-        width: 100%;
-        max-height: 400px;
-        object-fit: contain;
-        border-radius: 5px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        color: white;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 15px;
-        opacity: 0;
-        transition: opacity 0.3s;
-        border-radius: 5px;
-    }
-
-    .book-cover:hover .overlay {
-        opacity: 1;
-    }
-
-    .overlay button {
-        background-color: #F2ACC4;
-        border: none;
-        padding: 10px;
-        border-radius: 5px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .book-info-section {
-        flex: 1;
-        background-color: white;
-    }
-
-    .info-box {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 8px;
-        width: 40vw;
-        max-width: 50vw;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .info-box h3 {
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-        color: #333;
-    }
-
-    .info-box p {
-        margin: 15px 0;
-        line-height: 1.6;
-    }
-
-    .rating-section {
-        margin-top: 20px;
-    }
-
-    .stars i {
-        color: #FFD700;
-        font-size: 1.5rem;
-        cursor: pointer;
-    }
-
-    .review-section {
-        margin-top: 20px;
-    }
-
-    .review-section textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 1rem;
-        resize: vertical;
-    }
-
-    .submit-button {
-        margin-top: 15px;
-        padding: 10px 15px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 1rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .submit-button:hover {
-        background-color: #45a049;
-    }
-
-    .submit-button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    .validation-message {
-        color: red;
-        font-size: 0.9rem;
-        margin-top: 5px;
-    }
-
-    .confirmation-message {
-        color: green;
-        margin-top: 10px;
-    }
-</style>
-
 @code {
-[Parameter]
-public int Cover_I { get; set; }
+    [Parameter]
+    public int Cover_I { get; set; }
 
-private Book book;
-private bool isLoading = true;
-private string errorMessage;
+    private Book book;
+    private bool isLoading = true;
+    private string errorMessage;
 
-private int rating = 0;
-private string reviewText = "";
-private bool showConfirmation = false;
-private List<int> likedCoverIds = new();
+    private int rating = 0;
+    private string reviewText = "";
+    private bool showConfirmation = false;
+    private List<int> likedCoverIds = new();
+    private List<int> readCoverIds = new();
 
 
-private bool IsFormValid => rating > 0 && !string.IsNullOrWhiteSpace(reviewText);
+    private bool IsFormValid => rating > 0 && !string.IsNullOrWhiteSpace(reviewText);
 
-protected override async Task OnInitializedAsync()
-{
-    try
+    protected override async Task OnInitializedAsync()
     {
-        book = await BookService.GetBookByCoverId(Cover_I);
-        // 👇 Benutzer & Favoriten holen
-        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
-        if (currentUser != null)
+        try
         {
-            var beziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
-            var gespeicherteBuchIds = beziehungen.Select(b => b.BuchId).ToList();
-
-            var gespeicherteBuecher = await BookRepository.ReadAsync(b => gespeicherteBuchIds.Contains(b.Id));
-            likedCoverIds = gespeicherteBuecher
-                .Where(b => int.TryParse(b.Olid, out _))
-                .Select(b => int.Parse(b.Olid))
-                .ToList();
-        }
-        if (book == null)
-        {
-            errorMessage = "Buch nicht gefunden.";
-        }
-    }
-    catch (Exception ex)
-    {
-        errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
-    }
-    finally
-    { 
-        isLoading = false;
-    }
-}
-
-    
-private async Task LikeBook(Book book)
-{
-    Console.WriteLine($"Liking book: {book.Title}");
-
-    var coverId = book.Cover_I.Value;
-
-    var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
-    if (currentUser == null)
-    {
-        Console.WriteLine("Kein eingeloggter Benutzer gefunden!");
-        return;
-    }
-
-    // Prüfen ob bereits als geliked gespeichert
-    if (likedCoverIds.Contains(coverId))
-    {
-        // Entfernen
-        var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
-        if (bestehendesBuch != null)
-        {
-            var beziehung = (await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id)).FirstOrDefault();
-            if (beziehung != null)
+            book = await BookService.GetBookByCoverId(Cover_I);
+            var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+            if (currentUser != null)
             {
-                await BeziehungsRepo.DeleteAsync(beziehung);
+                var beziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+                var gespeicherteBuchIds = beziehungen.Select(b => b.BuchId).ToList();
+
+                var gespeicherteBuecher = await BookRepository.ReadAsync(b => gespeicherteBuchIds.Contains(b.Id ));
+                likedCoverIds = gespeicherteBuecher
+                    .Where(b => int.TryParse(b.Olid, out _))
+                    .Select(b => int.Parse(b.Olid))
+                    .ToList();
             }
-            await BookRepository.DeleteAsync(bestehendesBuch);
-        }
-        likedCoverIds.Remove(coverId);
-    }
-    else
-    {
-        // Hinzufügen
-        likedCoverIds.Add(coverId);
-
-        var neuesBuch = new Buch
-        {
-            Titel = book.Title,
-            Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
-            Beschreibung = null,
-            Erster_Satz = book.First_Sentence,
-            CoverURL = book.CoverUrl,
-            ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
-            Olid = coverId.ToString()
-        };
-
-        await BookRepository.CreateAsync(neuesBuch);
-
-        var gespeichertesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
-
-        if (gespeichertesBuch != null)
-        {
-            var beziehung = new BuchBeziehung_JT
+            if (book == null)
             {
-                BuchId = gespeichertesBuch.Id,
+                errorMessage = "Buch nicht gefunden.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
+        }
+        finally
+        { 
+            isLoading = false;
+        }
+    }
+
+    private async Task ToggleBookStatus(Book book, BuchStatus status)
+    {
+        var coverId = book.Cover_I.Value;
+        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+        if (currentUser == null) return;
+
+        var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
+        if (bestehendesBuch == null)
+        {
+            bestehendesBuch = new Buch
+            {
+                Titel = book.Title,
+                Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
+                Beschreibung = null,
+                Erster_Satz = book.First_Sentence,
+                CoverURL = book.CoverUrl,
+                ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
+                Olid = coverId.ToString()
+            };
+            await BookRepository.CreateAsync(bestehendesBuch);
+        }
+
+        // Entferne den anderen Status, falls er bereits existiert
+        var andereStatus = status == BuchStatus.Favoriten ? BuchStatus.Gelesen : BuchStatus.Favoriten;
+        var bestehendeBeziehung = (await BeziehungsRepo.ReadAsync(b =>
+            b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id && b.Status == andereStatus)).FirstOrDefault();
+        if (bestehendeBeziehung != null)
+        {
+            await BeziehungsRepo.DeleteAsync(bestehendeBeziehung);
+            if (andereStatus == BuchStatus.Favoriten)
+                likedCoverIds.Remove(coverId);
+        }
+
+        // Füge oder entferne die aktuelle Beziehung
+        var beziehung = (await BeziehungsRepo.ReadAsync(b =>
+            b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id && b.Status == status)).FirstOrDefault();
+
+        if (beziehung != null)
+        {
+            await BeziehungsRepo.DeleteAsync(beziehung);
+            if (status == BuchStatus.Favoriten)
+                likedCoverIds.Remove(coverId);
+        }
+        else
+        {
+            var neueBeziehung = new BuchBeziehung_JT
+            {
+                BuchId = bestehendesBuch.Id,
                 BenutzerId = currentUser.Id,
-                Status = BuchStatus.Favoriten,
+                Status = status,
                 Anfangsdatum = DateTime.Now
             };
+            await BeziehungsRepo.CreateAsync(neueBeziehung);
 
-            await BeziehungsRepo.CreateAsync(beziehung);
+            if (status == BuchStatus.Favoriten)
+                likedCoverIds.Add(coverId);
         }
     }
-}
 
-private void MarkAsRead(Book book)
-{
-    
-}
 
-private void SetRating(int star)
-{
-rating = star;
-StateHasChanged();
-}
+    private void SetRating(int star)
+    {
+        rating = star;
+        StateHasChanged();
+    }
 
-private void SubmitReview()
-{
-Console.WriteLine($"Bewertung: {rating} Sterne");
-Console.WriteLine($"Rezension: {reviewText}");
-
-showConfirmation = true;
-
-_ = Task.Delay(3000).ContinueWith(_ =>
-{
-showConfirmation = false;
-InvokeAsync(StateHasChanged);
-});
-}
+    private void SubmitReview()
+    {
+        showConfirmation = true;
+        _ = Task.Delay(3000).ContinueWith(_ =>
+        {
+            showConfirmation = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
 }

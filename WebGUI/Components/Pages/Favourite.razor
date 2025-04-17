@@ -1,10 +1,13 @@
 ﻿@page "/favorite-books"
+
 @using Domain.Interfaces
 @using Model.Entities
 @inject IRepository<Buch> BookRepository
 @inject IRepository<BuchBeziehung_JT> BeziehungsRepo
 @inject IRepository<Benutzer> BenutzerRepo
 @inject NavigationManager Navigation
+@inject OpenLibraryService BookService
+
 
 @rendermode InteractiveServer
 
@@ -12,32 +15,36 @@
 
 <h1>Meine Favoriten</h1>
 
-@if (favoriteBooks == null)
+@if (isLoading)
 {
     <p>Lade Lieblingsbücher...</p>
 }
-else if (!favoriteBooks.Any())
+else if (!string.IsNullOrEmpty(errorMessage))
 {
-    <p>Du hast noch keine Lieblingsbücher gespeichert.</p>
+    <p class="text-danger">@errorMessage</p>
 }
-else
+else if (books != null && books.Count > 0)
 {
 <div class="book-covers" style="padding: 20px">
-    @foreach (var buch in favoriteBooks)
+    @foreach (var book in books)
     {
     <div class="book-cover">
-        <img src="@buch.CoverURL" alt="@buch.Titel" />
+        <img src="@book.CoverURL" alt="@book.Titel" />
         <div class="overlay">
-            <button>
-                <i class="bi bi-heart-fill" style="color: red;"></i>
+            <button @onclick="() => LikeBook(book)">
+                <i class="bi bi-heart-fill" style="color: red"></i>
             </button>
-            <button @onclick="() => NavigateTo(buch.Olid)">
+            <button @onclick="() => NavigateTo(book.Olid)">
                 <i class="bi bi-book-half"></i>
             </button>
         </div>
     </div>
     }
 </div>
+}
+else
+{
+<p>Du hast noch keine Favoriten gespeichert.</p>
 }
 
 <style>
@@ -93,26 +100,59 @@ else
         opacity: 1;
     }
 </style>
-
 @code {
-    private List<Buch> favoriteBooks;
+    private List<Buch> books = new();
+    private bool isLoading = false;
+    private string errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+        await LoadLikedBooks();
+    }
 
-        if (currentUser == null)
+    private async Task LoadLikedBooks()
+    {
+        isLoading = true;
+        try
         {
-            favoriteBooks = new List<Buch>();
+            var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+            if (currentUser != null)
+            {
+                var beziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+                var gespeicherteBuchIds = beziehungen.Select(b => b.BuchId).ToList();
+                books = await BookRepository.ReadAsync(b => gespeicherteBuchIds.Contains(b.Id));
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Fehler beim Laden der Favoriten: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LikeBook(Buch book)
+    {
+        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+        if (currentUser == null || book == null)
+        {
+            Console.WriteLine("Fehlender Benutzer oder Buch.");
             return;
         }
 
-        var beziehungen = await BeziehungsRepo.ReadAsync(b =>
-        b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+        var beziehung = (await BeziehungsRepo.ReadAsync(b =>
+            b.BenutzerId == currentUser.Id && b.BuchId == book.Id)).FirstOrDefault();
 
-        var buchIds = beziehungen.Select(b => b.BuchId).Distinct().ToList();
+        if (beziehung != null)
+        {
+            await BeziehungsRepo.DeleteAsync(beziehung);
+        }
 
-        favoriteBooks = await BookRepository.ReadAsync(b => buchIds.Contains(b.Id));
+        await BookRepository.DeleteAsync(book);
+
+        books.Remove(book);
     }
 
     private void NavigateTo(string olid)
