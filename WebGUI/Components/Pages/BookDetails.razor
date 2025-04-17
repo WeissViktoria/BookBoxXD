@@ -3,9 +3,12 @@
 @using Model.Entities
 @inject OpenLibraryService BookService
 @inject NavigationManager Navigation
+@inject IRepository<Buch> BookRepository;
+@inject IRepository<Benutzer> BenutzerRepo;
+@inject IRepository<BuchBeziehung_JT> BeziehungsRepo;
 @rendermode InteractiveServer
 
-@inject IRepository<Benutzer> BenutzerRepo
+
 
 <PageTitle>Buchdetails</PageTitle>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -37,7 +40,17 @@
                     <img src="@book.CoverUrl" alt="@book.Title" class="book-cover-img" />
                     <div class="overlay">
                         <button @onclick="() => LikeBook(book)">
-                            <i class="bi bi-heart"></i>
+                            @{
+                            string iconClass = "bi-heart";
+                            string iconColor = "white";
+
+                            if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
+                            {
+                            iconClass = "bi-heart-fill";
+                            iconColor = "red";
+                            }
+                            }
+                            <i class="bi @iconClass" style="color: @iconColor"></i>
                         </button>
                         <button @onclick="() => MarkAsRead(book)">
                             <i class="bi bi-bookmark-check"></i>
@@ -51,35 +64,35 @@
                     <h3>Buchinfos</h3>
                     @if (book.Author_Name != null && book.Author_Name.Count > 0)
                     {
-                    <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
+                        <p><strong>Autor:</strong> @string.Join(", ", book.Author_Name)</p>
                     }
                     @if (!string.IsNullOrEmpty(book.First_Sentence))
                     {
-                    <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
+                        <p><strong>Erster Satz:</strong> @book.First_Sentence</p>
                     }
                     @if (book.ISBN != null && book.ISBN.Count > 0)
                     {
-                    <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
+                        <p><strong>ISBN:</strong> @string.Join(", ", book.ISBN)</p>
                     }
                     @if (!string.IsNullOrEmpty(book.Publisher))
                     {
-                    <p><strong>Verlag:</strong> @book.Publisher</p>
+                        <p><strong>Verlag:</strong> @book.Publisher</p>
                     }
                     @if (book.First_Publish_Year > 0)
                     {
-                    <p><strong>Erstveröffentlichung:</strong> @book.First_Publish_Year</p>
+                        <p><strong>Erstveröffentlichung:</strong> @book.First_Publish_Year</p>
                     }
                     @if (book.Number_of_Pages != null)
                     {
-                    <p><strong>Seitenanzahl:</strong> @book.Number_of_Pages</p>
+                        <p><strong>Seitenanzahl:</strong> @book.Number_of_Pages</p>
                     }
                     @if (book.Subject != null && book.Subject.Count > 0)
                     {
-                    <p><strong>Fachgebiete:</strong> @string.Join(", ", book.Subject)</p>
+                        <p><strong>Fachgebiete:</strong> @string.Join(", ", book.Subject)</p>
                     }
                     @if (book.Language != null && book.Language.Count > 0)
                     {
-                    <p><strong>Sprache(n):</strong> @string.Join(", ", book.Language)</p>
+                        <p><strong>Sprache(n):</strong> @string.Join(", ", book.Language)</p>
                     }
 
                     <!-- Bewertung -->
@@ -302,32 +315,107 @@ private string errorMessage;
 private int rating = 0;
 private string reviewText = "";
 private bool showConfirmation = false;
+private List<int> likedCoverIds = new();
+
 
 private bool IsFormValid => rating > 0 && !string.IsNullOrWhiteSpace(reviewText);
 
 protected override async Task OnInitializedAsync()
 {
-try
-{
-book = await BookService.GetBookByCoverId(Cover_I);
-if (book == null)
-{
-errorMessage = "Buch nicht gefunden.";
-}
-}
-catch (Exception ex)
-{
-errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
-}
-finally
-{
-isLoading = false;
-}
+    try
+    {
+        book = await BookService.GetBookByCoverId(Cover_I);
+        // 👇 Benutzer & Favoriten holen
+        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+        if (currentUser != null)
+        {
+            var beziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+            var gespeicherteBuchIds = beziehungen.Select(b => b.BuchId).ToList();
+
+            var gespeicherteBuecher = await BookRepository.ReadAsync(b => gespeicherteBuchIds.Contains(b.Id));
+            likedCoverIds = gespeicherteBuecher
+                .Where(b => int.TryParse(b.Olid, out _))
+                .Select(b => int.Parse(b.Olid))
+                .ToList();
+        }
+        if (book == null)
+        {
+            errorMessage = "Buch nicht gefunden.";
+        }
+    }
+    catch (Exception ex)
+    {
+        errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
+    }
+    finally
+    { 
+        isLoading = false;
+    }
 }
 
-private void LikeBook(Book book)
+    
+private async Task LikeBook(Book book)
 {
-Console.WriteLine("Buch wurde geliket.");
+    Console.WriteLine($"Liking book: {book.Title}");
+
+    var coverId = book.Cover_I.Value;
+
+    var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+    if (currentUser == null)
+    {
+        Console.WriteLine("Kein eingeloggter Benutzer gefunden!");
+        return;
+    }
+
+    // Prüfen ob bereits als geliked gespeichert
+    if (likedCoverIds.Contains(coverId))
+    {
+        // Entfernen
+        var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
+        if (bestehendesBuch != null)
+        {
+            var beziehung = (await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id)).FirstOrDefault();
+            if (beziehung != null)
+            {
+                await BeziehungsRepo.DeleteAsync(beziehung);
+            }
+            await BookRepository.DeleteAsync(bestehendesBuch);
+        }
+        likedCoverIds.Remove(coverId);
+    }
+    else
+    {
+        // Hinzufügen
+        likedCoverIds.Add(coverId);
+
+        var neuesBuch = new Buch
+        {
+            Titel = book.Title,
+            Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
+            Beschreibung = null,
+            Erster_Satz = book.First_Sentence,
+            CoverURL = book.CoverUrl,
+            ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
+            Olid = coverId.ToString()
+        };
+
+        await BookRepository.CreateAsync(neuesBuch);
+
+        var gespeichertesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
+
+        if (gespeichertesBuch != null)
+        {
+            var beziehung = new BuchBeziehung_JT
+            {
+                BuchId = gespeichertesBuch.Id,
+                BenutzerId = currentUser.Id,
+                Status = BuchStatus.Favoriten,
+                Anfangsdatum = DateTime.Now
+            };
+
+            await BeziehungsRepo.CreateAsync(beziehung);
+        }
+    }
 }
 
 private void MarkAsRead(Book book)

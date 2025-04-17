@@ -163,6 +163,20 @@ else if (books != null)
                 var random = new Random();
                 books = books.OrderBy(b => random.Next()).Take(56).ToList();
             }
+
+            // 👇 Benutzer & Favoriten holen
+            var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+            if (currentUser != null)
+            {
+                var beziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+                var gespeicherteBuchIds = beziehungen.Select(b => b.BuchId).ToList();
+
+                var gespeicherteBuecher = await BookRepository.ReadAsync(b => gespeicherteBuchIds.Contains(b.Id));
+                likedCoverIds = gespeicherteBuecher
+                    .Where(b => int.TryParse(b.Olid, out _))
+                    .Select(b => int.Parse(b.Olid))
+                    .ToList();
+            }
         }
         catch (Exception ex)
         {
@@ -173,6 +187,7 @@ else if (books != null)
             isLoading = false;
         }
     }
+
 
     private async Task FetchBooks()
     {

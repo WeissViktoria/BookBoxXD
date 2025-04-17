@@ -160,7 +160,7 @@ else
         isSaving = true;
         try
         {
-            await BenutzerRepo.UpdataAsync(user);
+            await BenutzerRepo.UpdateAsync(user);
             Navigation.NavigateTo("/user-profile");
         }
         finally

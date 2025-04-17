@@ -30,7 +30,7 @@ public class ARepository<TEntity> : IRepository<TEntity> where TEntity : class
         return list;
     }
 
-    public async Task UpdataAsync(TEntity t)
+    public async Task UpdateAsync(TEntity t)
     {
         using var context = _contextFactory.CreateDbContext();
         context.ChangeTracker.Clear();

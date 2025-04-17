@@ -14,11 +14,11 @@
 
 @if (favoriteBooks == null)
 {
-<p>Lade Lieblingsbücher...</p>
+    <p>Lade Lieblingsbücher...</p>
 }
 else if (!favoriteBooks.Any())
 {
-<p>Du hast noch keine Lieblingsbücher gespeichert.</p>
+    <p>Du hast noch keine Lieblingsbücher gespeichert.</p>
 }
 else
 {
@@ -95,31 +95,31 @@ else
 </style>
 
 @code {
-private List<Buch> favoriteBooks;
+    private List<Buch> favoriteBooks;
 
-protected override async Task OnInitializedAsync()
-{
-var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
 
-if (currentUser == null)
-{
-favoriteBooks = new List<Buch>();
-return;
-}
+        if (currentUser == null)
+        {
+            favoriteBooks = new List<Buch>();
+            return;
+        }
 
-var beziehungen = await BeziehungsRepo.ReadAsync(b =>
-b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+        var beziehungen = await BeziehungsRepo.ReadAsync(b =>
+        b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
 
-var buchIds = beziehungen.Select(b => b.BuchId).Distinct().ToList();
+        var buchIds = beziehungen.Select(b => b.BuchId).Distinct().ToList();
 
-favoriteBooks = await BookRepository.ReadAsync(b => buchIds.Contains(b.Id));
-}
+        favoriteBooks = await BookRepository.ReadAsync(b => buchIds.Contains(b.Id));
+    }
 
-private void NavigateTo(string olid)
-{
-if (!string.IsNullOrEmpty(olid))
-{
-Navigation.NavigateTo($"/book_details/{olid}");
-}
-}
+    private void NavigateTo(string olid)
+    {
+        if (!string.IsNullOrEmpty(olid))
+        {
+            Navigation.NavigateTo($"/book_details/{olid}");
+        }
+    }
 }
