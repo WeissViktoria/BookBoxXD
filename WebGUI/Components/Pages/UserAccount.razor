@@ -82,6 +82,8 @@
         </div>
         <h3>@user.Benutzername</h3>
         <button @onclick="EditProfile">Bearbeiten</button>
+        <br/>
+        <button style="background-color: #A64365" @onclick="LogOut">Log Out</button>
     </div>
 }
 else
@@ -109,6 +111,17 @@ else
         return null; // Falls keiner eingeloggt ist
     }
 
+    private async Task LogOut()
+    {
+        var allUsers = await BenutzerRepo.ReadAsync(u => u.loggedIn == true);
+        foreach (var user in allUsers)
+        {
+            user.loggedIn = false;
+            await BenutzerRepo.UpdateAsync(user);
+        }
+        Navigation.NavigateTo("/login");
+    }
+    
     private void EditProfile()
     {
         // Hier kannst du die Logik hinzufügen, um das Benutzerprofil zu bearbeiten

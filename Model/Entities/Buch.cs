@@ -12,11 +12,11 @@ public class Buch
     
     [Required, StringLength(200)]
     [Column("TITEL")]
-    public string Titel { get; set; }
+    public string? Titel { get; set; }
     
     [Required, StringLength(200)]
     [Column("AUTOR")]
-    public string Autor { get; set; }
+    public string? Autor { get; set; }
     
     [Column("BESCHREIBUNG")]
     public string? Beschreibung { get; set; }
