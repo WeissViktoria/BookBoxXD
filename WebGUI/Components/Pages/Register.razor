@@ -125,11 +125,11 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Benutzername:</label>
-                                    <InputText @bind-Value="NewUser.Benutzername" class="form-control" />
+                                    <InputText @bind-Value="NewUser.Benutzername" class="form-control" placeholder="Gib deinen Benutzernamen ein"/>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">E-Mail:</label>
-                                    <InputText @bind-Value="NewUser.EmailAdresse" class="form-control" type="email" />
+                                    <InputText @bind-Value="NewUser.EmailAdresse" class="form-control" type="email" placeholder="Gib deine E-Mail Adresse ein" />
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Geburtsdatum:</label>
@@ -137,11 +137,14 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Passwort:</label>
-                                    <InputText @bind-Value="NewUser.Passwort" class="form-control" type="password" />
+                                    <InputText @bind-Value="NewUser.Passwort" class="form-control" type="password" placeholder="Gib dein Passwort ein"/>
                                 </div>
 
                                 <button class="btn btn-custom" type="submit">Registrieren</button>
-                            </EditForm>
+                                <p class="mt-3">
+                                    <a href="/login">Schon ein Konto?</a>
+                                </p>
+                                </EditForm>
 
 
                         </div>
