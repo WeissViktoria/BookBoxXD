@@ -162,7 +162,22 @@
         public string Benutzername { get; set; } = string.Empty;
         public string Passwort { get; set; } = string.Empty;
     }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LogOutAllUsers();
+    }
 
+    private async Task LogOutAllUsers()
+    {
+        var allUsers = await BenutzerRepo.ReadAsync(u => u.loggedIn == true);
+        foreach (var user in allUsers)
+        {
+            user.loggedIn = false;
+            await BenutzerRepo.UpdateAsync(user);
+        }
+    }
+    
     private async Task CheckUser()
     {
         var user = await BenutzerRepo.ReadAsync(u => u.Benutzername == loginData.Benutzername
@@ -172,7 +187,7 @@
         {
             var loggedInUser = user.First();
             loggedInUser.loggedIn = true;
-            await BenutzerRepo.UpdataAsync(loggedInUser);
+            await BenutzerRepo.UpdateAsync(loggedInUser);
             
             Navigation.NavigateTo("/home");
         }
