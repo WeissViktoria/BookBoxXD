@@ -18,4 +18,10 @@ public class BuchBeziehung_JT
     
     [Column("ANFANGSDATUM")]
     public DateTime Anfangsdatum { get; set; }
+    
+    [Column("KOMMENTARE")]
+    public string? Kommentar { get; set; }
+    
+    [Column("STERNE")]
+    public int? Sterne { get; set; }
 }

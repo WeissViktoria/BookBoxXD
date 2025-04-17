@@ -8,6 +8,7 @@
 @inject IRepository<BuchBeziehung_JT> BeziehungsRepo;
 @rendermode InteractiveServer
 
+<link href="css/bookDetails.css" rel="stylesheet" />
 
 
 <PageTitle>Buchdetails</PageTitle>
@@ -39,21 +40,31 @@
                 <div class="book-cover">
                     <img src="@book.CoverUrl" alt="@book.Title" class="book-cover-img" />
                     <div class="overlay">
-                        <button @onclick="() => LikeBook(book)">
+                        <button @onclick="() => ToggleBookStatus(book, BuchStatus.Favoriten)">
                             @{
-                            string iconClass = "bi-heart";
-                            string iconColor = "white";
+                                string LikeIconClass = "bi-heart";
+                                string LikeIconColor = "white";
 
-                            if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
-                            {
-                            iconClass = "bi-heart-fill";
-                            iconColor = "red";
+                                if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
+                                {
+                                    LikeIconClass = "bi-heart-fill";
+                                    LikeIconColor = "red";
+                                }
                             }
-                            }
-                            <i class="bi @iconClass" style="color: @iconColor"></i>
+                            <i class="bi @LikeIconClass" style="color: @LikeIconColor"></i>
                         </button>
-                        <button @onclick="() => MarkAsRead(book)">
-                            <i class="bi bi-bookmark-check"></i>
+                        <button @onclick="() => ToggleBookStatus(book, BuchStatus.Gelesen)">
+                            @{
+                                string ReadIconClass = "bi-bookmark-check";
+                                string ReadIconColor = "white";
+
+                                if (book.Cover_I.HasValue && readCoverIds.Contains(book.Cover_I.Value))
+                                {
+                                    ReadIconClass = "bi-bookmark-check-fill";
+                                    ReadIconColor = "red";
+                                }
+                            }
+                            <i class="bi @ReadIconClass" style="color: @ReadIconColor"></i>
                         </button>
                     </div>
                 </div>
@@ -138,6 +149,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
     .page-container {
@@ -332,82 +344,84 @@
     @popupMessage
 </div>
 }
+
 @code {
-[Parameter]
-public int Cover_I { get; set; }
+    [Parameter]
+    public int Cover_I { get; set; }
 
-private Book book;
-private bool isLoading = true;
-private string errorMessage;
+    private Book book;
+    private bool isLoading = true;
+    private string errorMessage;
 
-private int rating = 0;
-private string reviewText = "";
-private bool showConfirmation = false;
-private List<int> likedCoverIds = new();
+    private int rating = 0;
+    private string reviewText = "";
+    private bool showConfirmation = false;
+    private List<int> likedCoverIds = new();
+    private List<int> readCoverIds = new();
 
 
-private bool IsFormValid => rating > 0 && !string.IsNullOrWhiteSpace(reviewText);
+    private bool IsFormValid => rating > 0 && !string.IsNullOrWhiteSpace(reviewText);
 
-protected override async Task OnInitializedAsync()
-{
-    try
+    protected override async Task OnInitializedAsync()
     {
-        book = await BookService.GetBookByCoverId(Cover_I);
-        // 👇 Benutzer & Favoriten holen
-        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
-        if (currentUser != null)
+        try
         {
-            var beziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
-            var gespeicherteBuchIds = beziehungen.Select(b => b.BuchId).ToList();
-
-            var gespeicherteBuecher = await BookRepository.ReadAsync(b => gespeicherteBuchIds.Contains(b.Id));
-            likedCoverIds = gespeicherteBuecher
-                .Where(b => int.TryParse(b.Olid, out _))
-                .Select(b => int.Parse(b.Olid))
-                .ToList();
-        }
-        if (book == null)
-        {
-            errorMessage = "Buch nicht gefunden.";
-        }
-    }
-    catch (Exception ex)
-    {
-        errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
-    }
-    finally
-    { 
-        isLoading = false;
-    }
-}
-
-    
-private async Task LikeBook(Book book)
-{
-    Console.WriteLine($"Liking book: {book.Title}");
-
-    var coverId = book.Cover_I.Value;
-
-    var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
-    if (currentUser == null)
-    {
-        Console.WriteLine("Kein eingeloggter Benutzer gefunden!");
-        return;
-    }
-
-    // Prüfen ob bereits als geliked gespeichert
-    if (likedCoverIds.Contains(coverId))
-    {
-        // Entfernen
-        var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
-        if (bestehendesBuch != null)
-        {
-            var beziehung = (await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id)).FirstOrDefault();
-            if (beziehung != null)
+            book = await BookService.GetBookByCoverId(Cover_I);
+            var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+            if (currentUser != null)
             {
-                await BeziehungsRepo.DeleteAsync(beziehung);
+                var LikedBeziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+                var ReadBeziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Gelesen);
+
+                var LikedGespeicherteBuchIds = LikedBeziehungen.Select(b => b.BuchId).ToList();
+                var ReadGespeicherteBuchIds = ReadBeziehungen.Select(b => b.BuchId).ToList();
+                
+                var LikedGespeicherteBuecher = await BookRepository.ReadAsync(b => LikedGespeicherteBuchIds.Contains(b.Id ));
+                likedCoverIds = LikedGespeicherteBuecher
+                    .Where(b => int.TryParse(b.Olid, out _))
+                    .Select(b => int.Parse(b.Olid))
+                    .ToList();
+                var ReadGespeicherteBuecher = await BookRepository.ReadAsync(b => ReadGespeicherteBuchIds.Contains(b.Id ));
+                readCoverIds = ReadGespeicherteBuecher
+                    .Where(b => int.TryParse(b.Olid, out _))
+                    .Select(b => int.Parse(b.Olid))
+                    .ToList();
             }
-            await BookRepository.DeleteAsync(bestehendesBuch);
+            if (book == null)
+            {
+                errorMessage = "Buch nicht gefunden.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
+        }
+        finally
+        { 
+            isLoading = false;
+        }
+    }
+
+    private async Task ToggleBookStatus(Book book, BuchStatus status)
+    {
+        var coverId = book.Cover_I.Value;
+        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+        if (currentUser == null) return;
+
+        var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
+        if (bestehendesBuch == null)
+        {
+            bestehendesBuch = new Buch
+            {
+                Titel = book.Title,
+                Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
+                Beschreibung = null,
+                Erster_Satz = book.First_Sentence,
+                CoverURL = book.CoverUrl,
+                ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
+                Olid = coverId.ToString()
+            };
+            await BookRepository.CreateAsync(bestehendesBuch);
         }
         likedCoverIds.Remove(coverId);
         await ShowPopup($"{book.Title} aus Favoriten entfernt!");
@@ -417,30 +431,43 @@ private async Task LikeBook(Book book)
         // Hinzufügen
         likedCoverIds.Add(coverId);
 
-        var neuesBuch = new Buch
+
+        // Entferne den anderen Status, falls er bereits existiert
+        var andereStatus = status == BuchStatus.Favoriten ? BuchStatus.Gelesen : BuchStatus.Favoriten;
+        var bestehendeBeziehung = (await BeziehungsRepo.ReadAsync(b =>
+            b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id && b.Status == andereStatus)).FirstOrDefault();
+        if (bestehendeBeziehung != null)
         {
-            Titel = book.Title,
-            Autor = string.Join(", ", book.Author_Name ?? new List<string>()),
-            Beschreibung = null,
-            Erster_Satz = book.First_Sentence,
-            CoverURL = book.CoverUrl,
-            ISBN = book.ISBN != null ? string.Join(", ", book.ISBN) : null,
-            Olid = coverId.ToString()
-        };
+            await BeziehungsRepo.DeleteAsync(bestehendeBeziehung);
+            if (andereStatus == BuchStatus.Favoriten)
+                likedCoverIds.Remove(coverId);
+            else
+                readCoverIds.Remove(coverId);
+        }
 
-        await BookRepository.CreateAsync(neuesBuch);
+        // Füge oder entferne die aktuelle Beziehung
+        var beziehung = (await BeziehungsRepo.ReadAsync(b =>
+            b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id && b.Status == status)).FirstOrDefault();
 
-        var gespeichertesBuch = (await BookRepository.ReadAsync(b => b.Olid == coverId.ToString())).FirstOrDefault();
-
-        if (gespeichertesBuch != null)
+        if (beziehung != null)
         {
-            var beziehung = new BuchBeziehung_JT
+            await BeziehungsRepo.DeleteAsync(beziehung);
+            if (status == BuchStatus.Favoriten)
+                likedCoverIds.Remove(coverId);
+            else
+                readCoverIds.Remove(coverId);
+        }
+        else
+        {
+            var neueBeziehung = new BuchBeziehung_JT
             {
-                BuchId = gespeichertesBuch.Id,
+                BuchId = bestehendesBuch.Id,
                 BenutzerId = currentUser.Id,
-                Status = BuchStatus.Favoriten,
+                Status = status,
                 Anfangsdatum = DateTime.Now
             };
+            await BeziehungsRepo.CreateAsync(neueBeziehung);
+
 
             await BeziehungsRepo.CreateAsync(beziehung);
         }await ShowPopup($"{book.Title} zu Favoriten hinzugefügt!");
@@ -473,17 +500,28 @@ rating = star;
 StateHasChanged();
 }
 
-private void SubmitReview()
-{
-Console.WriteLine($"Bewertung: {rating} Sterne");
-Console.WriteLine($"Rezension: {reviewText}");
+            if (status == BuchStatus.Favoriten)
+                likedCoverIds.Add(coverId);
+            else
+                readCoverIds.Add(coverId);
+        }
+    }
 
-showConfirmation = true;
 
-_ = Task.Delay(3000).ContinueWith(_ =>
-{
-showConfirmation = false;
-InvokeAsync(StateHasChanged);
-});
-}
+
+    private void SetRating(int star)
+    {
+        rating = star;
+        StateHasChanged();
+    }
+
+    private void SubmitReview()
+    {
+        showConfirmation = true;
+        _ = Task.Delay(3000).ContinueWith(_ =>
+        {
+            showConfirmation = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
 }
