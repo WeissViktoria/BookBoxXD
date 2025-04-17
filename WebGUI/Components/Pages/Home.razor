@@ -200,6 +200,10 @@ else if (books != null)
     private string searchQuery;
     private bool showSearchField = false;
     private List<int> likedCoverIds = new();
+    
+    
+    private string popupMessage;
+    private bool showPopup = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -284,10 +288,14 @@ else if (books != null)
                     .ToList();
             }
         }
-
-        likedCoverIds.Remove(coverId);
-        await ShowPopup($"{book.Title} aus Favoriten entfernt!");
-
+        catch (Exception ex)
+        {
+            errorMessage = "Fehler beim Laden der Bücher: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
 
@@ -358,19 +366,17 @@ else if (books != null)
         await ShowPopup($"{book.Title} zu Favoriten hinzugefügt!");
     }
 
-private string popupMessage;
-private bool showPopup = false;
 
-private async Task ShowPopup(string message, int duration = 3000)
-{
-    popupMessage = message;
-    showPopup = true;
-    StateHasChanged();
+    private async Task ShowPopup(string message, int duration = 3000)
+    {
+        popupMessage = message;
+        showPopup = true;
+        StateHasChanged();
 
-    await Task.Delay(duration);
-    showPopup = false;
-    StateHasChanged();
-}
+        await Task.Delay(duration);
+        showPopup = false;
+        StateHasChanged();
+    }
 
 
 }
