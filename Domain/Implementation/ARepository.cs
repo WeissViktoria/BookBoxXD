@@ -75,4 +75,5 @@ public class ARepository<TEntity> : IRepository<TEntity> where TEntity : class
         context.Set<TEntity>().Remove(t);
         await context.SaveChangesAsync();
     }
+    
 }

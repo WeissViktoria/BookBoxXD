@@ -107,7 +107,6 @@
                     }
 
                     <!-- Bewertung -->
-                    <!-- Bewertung -->
                     <div class="rating-section">
                         <h4>Bewertung:</h4>
                         <div class="stars">
@@ -152,185 +151,6 @@
 
 
 <style>
-    .page-container {
-        height: 100vh;
-        overflow: hidden;
-        background-color: white;
-    }
-
-    .book-details-container {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    .book-title-section {
-        padding: 5px 20px 30px 20px;
-        width: 100%;
-    }
-
-    .book-title-section h1 {
-        margin: 0;
-        font-size: 2rem;
-        color: #333;
-    }
-
-    .book-cover-section {
-        display: flex;
-        align-items: flex-start;
-    }
-
-    .book-cover-wrapper {
-        display: flex;
-        flex-direction: column;
-        margin: 0 20px;
-    }
-
-    .book-cover {
-        position: relative;
-        width: 250px;
-    }
-
-    .book-cover-img {
-        width: 100%;
-        max-height: 400px;
-        object-fit: contain;
-        border-radius: 5px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        color: white;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 15px;
-        opacity: 0;
-        transition: opacity 0.3s;
-        border-radius: 5px;
-    }
-
-    .book-cover:hover .overlay {
-        opacity: 1;
-    }
-
-    .overlay button {
-        background-color: #F2ACC4;
-        border: none;
-        padding: 10px;
-        border-radius: 5px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .book-info-section {
-        flex: 1;
-        background-color: white;
-    }
-
-    .info-box {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 8px;
-        width: 40vw;
-        max-width: 50vw;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .info-box h3 {
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-        color: #333;
-    }
-
-    .info-box p {
-        margin: 15px 0;
-        line-height: 1.6;
-    }
-
-    .rating-section {
-        margin-top: 20px;
-    }
-
-    .stars i {
-        color: #FFD700;
-        font-size: 1.5rem;
-        cursor: pointer;
-    }
-
-    .review-section {
-        margin-top: 20px;
-    }
-
-    .review-section textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 1rem;
-        resize: vertical;
-    }
-
-    .submit-button {
-        margin-top: 15px;
-        padding: 10px 15px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 1rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .submit-button:hover {
-        background-color: #45a049;
-    }
-
-    .submit-button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    .validation-message {
-        color: red;
-        font-size: 0.9rem;
-        margin-top: 5px;
-    }
-
-    .confirmation-message {
-        color: green;
-        margin-top: 10px;
-    }
-
-
-    .popup {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(57, 57, 57, 0.74);
-        color: white;
-        padding: 15px 25px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        z-index: 9999;
-        font-size: 1.1rem;
-        animation: fadeInOut 3s ease forwards;
-    }
-
     @@keyframes fadeInOut {
          0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
          10% { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -346,8 +166,7 @@
 }
 
 @code {
-    [Parameter]
-    public int Cover_I { get; set; }
+    [Parameter] public int Cover_I { get; set; }
 
     private Book book;
     private bool isLoading = true;
@@ -358,6 +177,9 @@
     private bool showConfirmation = false;
     private List<int> likedCoverIds = new();
     private List<int> readCoverIds = new();
+
+    private string popupMessage;
+    private bool showPopup = false;
 
 
     private bool IsFormValid => rating > 0 && !string.IsNullOrWhiteSpace(reviewText);
@@ -375,18 +197,19 @@
 
                 var LikedGespeicherteBuchIds = LikedBeziehungen.Select(b => b.BuchId).ToList();
                 var ReadGespeicherteBuchIds = ReadBeziehungen.Select(b => b.BuchId).ToList();
-                
-                var LikedGespeicherteBuecher = await BookRepository.ReadAsync(b => LikedGespeicherteBuchIds.Contains(b.Id ));
+
+                var LikedGespeicherteBuecher = await BookRepository.ReadAsync(b => LikedGespeicherteBuchIds.Contains(b.Id));
                 likedCoverIds = LikedGespeicherteBuecher
                     .Where(b => int.TryParse(b.Olid, out _))
                     .Select(b => int.Parse(b.Olid))
                     .ToList();
-                var ReadGespeicherteBuecher = await BookRepository.ReadAsync(b => ReadGespeicherteBuchIds.Contains(b.Id ));
+                var ReadGespeicherteBuecher = await BookRepository.ReadAsync(b => ReadGespeicherteBuchIds.Contains(b.Id));
                 readCoverIds = ReadGespeicherteBuecher
                     .Where(b => int.TryParse(b.Olid, out _))
                     .Select(b => int.Parse(b.Olid))
                     .ToList();
             }
+
             if (book == null)
             {
                 errorMessage = "Buch nicht gefunden.";
@@ -397,7 +220,7 @@
             errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
         }
         finally
-        { 
+        {
             isLoading = false;
         }
     }
@@ -423,14 +246,6 @@
             };
             await BookRepository.CreateAsync(bestehendesBuch);
         }
-        likedCoverIds.Remove(coverId);
-        await ShowPopup($"{book.Title} aus Favoriten entfernt!");
-    }
-    else
-    {
-        // Hinzufügen
-        likedCoverIds.Add(coverId);
-
 
         // Entferne den anderen Status, falls er bereits existiert
         var andereStatus = status == BuchStatus.Favoriten ? BuchStatus.Gelesen : BuchStatus.Favoriten;
@@ -453,9 +268,17 @@
         {
             await BeziehungsRepo.DeleteAsync(beziehung);
             if (status == BuchStatus.Favoriten)
+            {
                 likedCoverIds.Remove(coverId);
+                await ShowPopup($"{book.Title} aus Favoriten entfernt!");
+            }
             else
+            {
                 readCoverIds.Remove(coverId);
+                await ShowPopup($"{book.Title} aus Gelesen entfernt!");
+            }
+
+
         }
         else
         {
@@ -468,46 +291,29 @@
             };
             await BeziehungsRepo.CreateAsync(neueBeziehung);
 
-
-            await BeziehungsRepo.CreateAsync(beziehung);
-        }await ShowPopup($"{book.Title} zu Favoriten hinzugefügt!");
-    }
-}
-
-private string popupMessage;
-private bool showPopup = false;
-
-private async Task ShowPopup(string message, int duration = 3000)
-{
-    popupMessage = message;
-    showPopup = true;
-    StateHasChanged();
-
-    await Task.Delay(duration);
-    showPopup = false;
-    StateHasChanged();
-}
-
-
-private void MarkAsRead(Book book)
-{
-    
-}
-
-private void SetRating(int star)
-{
-rating = star;
-StateHasChanged();
-}
-
             if (status == BuchStatus.Favoriten)
+            {
                 likedCoverIds.Add(coverId);
+                await ShowPopup($"{book.Title} in Favoriten eingefügt!");
+            }
             else
+            {
                 readCoverIds.Add(coverId);
+                await ShowPopup($"{book.Title} in Gelesen eingefügt!");
+            }
         }
     }
 
+    private async Task ShowPopup(string message, int duration = 3000)
+    {
+        popupMessage = message;
+        showPopup = true;
+        StateHasChanged();
 
+        await Task.Delay(duration);
+        showPopup = false;
+        StateHasChanged();
+    }
 
     private void SetRating(int star)
     {
@@ -524,4 +330,5 @@ StateHasChanged();
             InvokeAsync(StateHasChanged);
         });
     }
+
 }
