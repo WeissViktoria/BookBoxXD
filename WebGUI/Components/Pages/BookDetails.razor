@@ -58,7 +58,7 @@
                                 string ReadIconClass = "bi-bookmark-check";
                                 string ReadIconColor = "white";
 
-                                if (book.Cover_I.HasValue && likedCoverIds.Contains(book.Cover_I.Value))
+                                if (book.Cover_I.HasValue && readCoverIds.Contains(book.Cover_I.Value))
                                 {
                                     ReadIconClass = "bi-bookmark-check-fill";
                                     ReadIconColor = "red";
@@ -175,11 +175,19 @@
             var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
             if (currentUser != null)
             {
-                var beziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
-                var gespeicherteBuchIds = beziehungen.Select(b => b.BuchId).ToList();
+                var LikedBeziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
+                var ReadBeziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Gelesen);
 
-                var gespeicherteBuecher = await BookRepository.ReadAsync(b => gespeicherteBuchIds.Contains(b.Id ));
-                likedCoverIds = gespeicherteBuecher
+                var LikedGespeicherteBuchIds = LikedBeziehungen.Select(b => b.BuchId).ToList();
+                var ReadGespeicherteBuchIds = ReadBeziehungen.Select(b => b.BuchId).ToList();
+                
+                var LikedGespeicherteBuecher = await BookRepository.ReadAsync(b => LikedGespeicherteBuchIds.Contains(b.Id ));
+                likedCoverIds = LikedGespeicherteBuecher
+                    .Where(b => int.TryParse(b.Olid, out _))
+                    .Select(b => int.Parse(b.Olid))
+                    .ToList();
+                var ReadGespeicherteBuecher = await BookRepository.ReadAsync(b => ReadGespeicherteBuchIds.Contains(b.Id ));
+                readCoverIds = ReadGespeicherteBuecher
                     .Where(b => int.TryParse(b.Olid, out _))
                     .Select(b => int.Parse(b.Olid))
                     .ToList();
@@ -230,6 +238,8 @@
             await BeziehungsRepo.DeleteAsync(bestehendeBeziehung);
             if (andereStatus == BuchStatus.Favoriten)
                 likedCoverIds.Remove(coverId);
+            else
+                readCoverIds.Remove(coverId);
         }
 
         // Füge oder entferne die aktuelle Beziehung
@@ -241,6 +251,8 @@
             await BeziehungsRepo.DeleteAsync(beziehung);
             if (status == BuchStatus.Favoriten)
                 likedCoverIds.Remove(coverId);
+            else
+                readCoverIds.Remove(coverId);
         }
         else
         {
@@ -255,6 +267,8 @@
 
             if (status == BuchStatus.Favoriten)
                 likedCoverIds.Add(coverId);
+            else
+                readCoverIds.Add(coverId);
         }
     }
 
