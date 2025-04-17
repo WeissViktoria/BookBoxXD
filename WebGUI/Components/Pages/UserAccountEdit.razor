@@ -66,6 +66,27 @@
     button:hover {
         background-color: #A64365;
     }
+
+    .save-success-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        z-index: 1000;
+        animation: fadeInOut 3s forwards;
+    }
+
+    @@keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(-20px); }
+        10% { opacity: 1; transform: translateY(0); }
+        90% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-20px); }
+    }
+
 </style>
 
 @if (isLoading)
@@ -100,7 +121,12 @@ else
 {
     <p style="text-align:center;">Kein Benutzer eingeloggt.</p>
 }
-
+@if (showSaveSuccess)
+{
+<div class="save-success-popup">
+    Profil erfolgreich gespeichert!
+</div>
+}
 @code {
     private Benutzer? user;
     private bool isLoading = true;
@@ -153,6 +179,17 @@ else
         return await File.ReadAllBytesAsync(imagePath);
     }
 
+  
+
+    private string GetImageSrc(byte[]? imageData)
+    {
+        return imageData == null
+            ? "default-placeholder.png"
+            : $"data:image/png;base64,{Convert.ToBase64String(imageData)}";
+    }
+    
+    private bool showSaveSuccess = false;
+
     private async Task SaveProfile()
     {
         if (user == null || isSaving) return;
@@ -161,6 +198,12 @@ else
         try
         {
             await BenutzerRepo.UpdateAsync(user);
+            showSaveSuccess = true;
+
+            StateHasChanged();  // UI sofort aktualisieren
+            await Task.Delay(3000); // Pop-up 3 Sekunden anzeigen
+            showSaveSuccess = false;
+
             Navigation.NavigateTo("/user-profile");
         }
         finally
@@ -169,10 +212,7 @@ else
         }
     }
 
-    private string GetImageSrc(byte[]? imageData)
-    {
-        return imageData == null
-            ? "default-placeholder.png"
-            : $"data:image/png;base64,{Convert.ToBase64String(imageData)}";
-    }
+    
+   
+
 }
