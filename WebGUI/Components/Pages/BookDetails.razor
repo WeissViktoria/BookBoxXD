@@ -105,7 +105,8 @@
                     {
                         <p><strong>Sprache(n):</strong> @string.Join(", ", book.Language)</p>
                     }
-
+                    @if (book.Cover_I.HasValue && allBookIds.Contains(book.Cover_I.Value))
+                    {
                     <!-- Bewertung -->
                     <div class="rating-section">
                         <h4>Bewertung:</h4>
@@ -124,24 +125,37 @@
                     <!-- Rezension -->
                     <div class="review-section">
                         <h4>Deine Rezension:</h4>
-                        <textarea @bind="reviewText" rows="4" placeholder="Schreibe deine Rezension hier..."></textarea>
 
-                        @if (!IsFormValid)
+                        @if (showEditReview || string.IsNullOrWhiteSpace(savedReview))
                         {
-                        <p class="validation-message">
-                            Bitte gib sowohl eine Bewertung (mind. 1 Stern) als auch eine Rezension ein.
-                        </p>
-                        }
+                            <textarea @bind="reviewText" rows="4" placeholder="Schreibe deine Rezension hier..."></textarea>
 
-                        <button class="submit-button" @onclick="SubmitReview" disabled="@(!IsFormValid)">
-                            <i class="bi bi-send"></i> Senden
-                        </button>
+                            @if (!IsFormValid)
+                            {
+                                <p class="validation-message">
+                                    Bitte gib sowohl eine Bewertung (mind. 1 Stern) als auch eine Rezension ein.
+                                </p>
+                            }
+
+                            <button class="submit-button" @onclick="SubmitReview" disabled="@(!IsFormValid)">
+                                <i class="bi bi-send"></i> Senden
+                            </button>
+                        }
+                        else
+                        {
+                            <p>@savedReview</p>
+                            <button class="edit-button submit-button" @onclick="() => showEditReview = true">
+                                <i class="bi bi-pencil-square"></i> Bearbeiten
+                            </button>
+                        }
 
                         @if (showConfirmation)
                         {
-                        <p class="confirmation-message">Deine Bewertung wurde gespeichert!</p>
+                            <p class="confirmation-message">Deine Bewertung wurde gespeichert!</p>
                         }
                     </div>
+                    }
+                    
                 </div>
             </div>
             }
@@ -175,11 +189,16 @@
     private int rating = 0;
     private string reviewText = "";
     private bool showConfirmation = false;
+
+    private List<int> allBookIds = new();
     private List<int> likedCoverIds = new();
     private List<int> readCoverIds = new();
 
     private string popupMessage;
     private bool showPopup = false;
+    
+    private string savedReview = "";
+    private bool showEditReview = false;
 
 
     private bool IsFormValid => rating > 0 && !string.IsNullOrWhiteSpace(reviewText);
@@ -190,39 +209,51 @@
         {
             book = await BookService.GetBookByCoverId(Cover_I);
             var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+
             if (currentUser != null)
             {
-                var LikedBeziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Favoriten);
-                var ReadBeziehungen = await BeziehungsRepo.ReadAsync(b => b.BenutzerId == currentUser.Id && b.Status == BuchStatus.Gelesen);
+                allBookIds = await GetCoverIdsByStatus(currentUser.Id, null);
+                likedCoverIds = await GetCoverIdsByStatus(currentUser.Id, BuchStatus.Favoriten);
+                readCoverIds = await GetCoverIdsByStatus(currentUser.Id, BuchStatus.Gelesen);
 
-                var LikedGespeicherteBuchIds = LikedBeziehungen.Select(b => b.BuchId).ToList();
-                var ReadGespeicherteBuchIds = ReadBeziehungen.Select(b => b.BuchId).ToList();
+                var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == Cover_I.ToString())).FirstOrDefault();
+                if (bestehendesBuch != null)
+                {
+                    var beziehung = (await BeziehungsRepo.ReadAsync(b =>
+                        b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id)).FirstOrDefault();
 
-                var LikedGespeicherteBuecher = await BookRepository.ReadAsync(b => LikedGespeicherteBuchIds.Contains(b.Id));
-                likedCoverIds = LikedGespeicherteBuecher
-                    .Where(b => int.TryParse(b.Olid, out _))
-                    .Select(b => int.Parse(b.Olid))
-                    .ToList();
-                var ReadGespeicherteBuecher = await BookRepository.ReadAsync(b => ReadGespeicherteBuchIds.Contains(b.Id));
-                readCoverIds = ReadGespeicherteBuecher
-                    .Where(b => int.TryParse(b.Olid, out _))
-                    .Select(b => int.Parse(b.Olid))
-                    .ToList();
-            }
-
-            if (book == null)
-            {
-                errorMessage = "Buch nicht gefunden.";
+                    if (beziehung != null)
+                    {
+                        rating = beziehung.Sterne ?? 0;
+                        savedReview = beziehung.Kommentar ?? "";
+                        reviewText = savedReview;
+                    }
+                }
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Fehler beim Laden der Buchdetails: {ex.Message}";
+            Console.WriteLine($"Fehler beim Laden der Daten: {ex.Message}");
         }
         finally
         {
             isLoading = false;
         }
+    }
+
+    private async Task<List<int>> GetCoverIdsByStatus(int userId, BuchStatus? status)
+    {
+        var beziehungen = status.HasValue
+            ? await BeziehungsRepo.ReadAsync(b => b.BenutzerId == userId && b.Status == status.Value)
+            : await BeziehungsRepo.ReadAsync(b => b.BenutzerId == userId);
+
+        var buchIds = beziehungen.Select(b => b.BuchId).ToList();
+        var buecher = await BookRepository.ReadAsync(b => buchIds.Contains(b.Id));
+
+        return buecher
+            .Where(b => int.TryParse(b.Olid, out _))
+            .Select(b => int.Parse(b.Olid))
+            .ToList();
     }
 
     private async Task ToggleBookStatus(Book book, BuchStatus status)
@@ -301,6 +332,7 @@
                 readCoverIds.Add(coverId);
                 await ShowPopup($"{book.Title} in Gelesen eingefügt!");
             }
+            
         }
     }
 
@@ -321,14 +353,46 @@
         StateHasChanged();
     }
 
-    private void SubmitReview()
+    private async Task SubmitReview()
     {
-        showConfirmation = true;
-        _ = Task.Delay(3000).ContinueWith(_ =>
+        var currentUser = (await BenutzerRepo.ReadAsync(b => b.loggedIn == true)).FirstOrDefault();
+        if (currentUser == null || book == null || !book.Cover_I.HasValue)
+            return;
+
+        var bestehendesBuch = (await BookRepository.ReadAsync(b => b.Olid == book.Cover_I.Value.ToString())).FirstOrDefault();
+        if (bestehendesBuch == null)
+            return;
+
+        var beziehung = (await BeziehungsRepo.ReadAsync(b =>
+            b.BenutzerId == currentUser.Id && b.BuchId == bestehendesBuch.Id)).FirstOrDefault();
+
+        if (beziehung != null)
         {
-            showConfirmation = false;
-            InvokeAsync(StateHasChanged);
-        });
+            beziehung.Kommentar = reviewText;
+            beziehung.Sterne = rating;
+            await BeziehungsRepo.UpdateAsync(beziehung);
+        }
+        else
+        {
+            var neueBeziehung = new BuchBeziehung_JT
+            {
+                BuchId = bestehendesBuch.Id,
+                BenutzerId = currentUser.Id,
+                Kommentar = reviewText,
+                Sterne = rating,
+                Anfangsdatum = DateTime.Now
+            };
+            await BeziehungsRepo.CreateAsync(neueBeziehung);
+        }
+
+        savedReview = reviewText;
+        showEditReview = false;
+        showConfirmation = true;
+        StateHasChanged();
+        await Task.Delay(3000);
+        showConfirmation = false;
+        StateHasChanged();
     }
 
+}
 }
